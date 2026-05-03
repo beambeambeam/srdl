@@ -71,6 +71,19 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 ## Git Hooks and Formatting
 
 - Format and lint fix: `bun run check`
+- Create a conventional commit with the prompt: `bun run commit`
+- Validate a commit message file manually: `bun run commit:check .git/COMMIT_EDITMSG`
+
+Conventional commits support an optional scope plus blank-line-separated body and footer blocks, for example:
+
+```text
+feat(auth): support token refresh
+
+Refresh expired access tokens before retrying protected requests.
+
+BREAKING CHANGE: session payload now includes refresh metadata
+Refs: #123
+```
 
 ## Project Structure
 

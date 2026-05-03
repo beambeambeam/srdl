@@ -19,6 +19,7 @@
   },
   "type": "module",
   "scripts": {
+    "prepare": "lefthook install",
     "dev": "turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
@@ -26,7 +27,9 @@
     "dev:server": "turbo -F @srdl/backend dev",
     "dev:setup": "turbo -F @srdl/backend dev:setup",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "commit": "cz",
+    "commit:check": "commitlint --edit"
   },
   "dependencies": {
     "@srdl/env": "workspace:*",
@@ -34,7 +37,11 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.3",
+    "@commitlint/config-conventional": "^20.5.3",
     "@srdl/config": "workspace:*",
+    "commitizen": "^4.3.1",
+    "cz-git": "^1.13.0",
     "lefthook": "latest",
     "oxfmt": "latest",
     "oxlint": "latest",
@@ -42,5 +49,65 @@
     "typescript": "catalog:",
     "ultracite": "7.6.2"
   },
-  "packageManager": "bun@1.3.5"
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "packageManager": "bun@1.3.5",
+  "cz-git": {
+    "disableEmoji": true,
+    "allowCustomScopes": true,
+    "allowBreakingChanges": [
+      "feat",
+      "fix",
+      "refactor"
+    ],
+    "types": [
+      {
+        "value": "feat",
+        "name": "feat: add a new feature"
+      },
+      {
+        "value": "fix",
+        "name": "fix: fix a bug"
+      },
+      {
+        "value": "docs",
+        "name": "docs: update documentation"
+      },
+      {
+        "value": "style",
+        "name": "style: formatting or non-functional style changes"
+      },
+      {
+        "value": "refactor",
+        "name": "refactor: change code without fixing a bug or adding a feature"
+      },
+      {
+        "value": "perf",
+        "name": "perf: improve performance"
+      },
+      {
+        "value": "test",
+        "name": "test: add or update tests"
+      },
+      {
+        "value": "build",
+        "name": "build: change build tooling or dependencies"
+      },
+      {
+        "value": "ci",
+        "name": "ci: change CI or automation"
+      },
+      {
+        "value": "chore",
+        "name": "chore: routine maintenance"
+      },
+      {
+        "value": "revert",
+        "name": "revert: revert a previous commit"
+      }
+    ]
+  }
 }
