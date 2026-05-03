@@ -19,52 +19,15 @@ import Header from "../components/header";
 
 import appCss from "../index.css?url";
 
-const getAuth = createServerFn({ method: "GET" }).handler(async () => {
-  return await getToken();
-});
+const getAuth = createServerFn({ method: "GET" }).handler(async () => await getToken());
 
 export interface RouterAppContext {
   queryClient: QueryClient;
   convexQueryClient: ConvexQueryClient;
 }
 
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "My App",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
-
-  component: RootDocument,
-  beforeLoad: async (ctx) => {
-    const token = await getAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-    return {
-      isAuthenticated: !!token,
-      token,
-    };
-  },
-});
-
 function RootDocument() {
-  const context = useRouteContext({ from: Route.id });
+  const context = useRouteContext({ from: "__root__" });
   return (
     <ConvexBetterAuthProvider
       client={context.convexQueryClient.convexClient}
@@ -88,3 +51,38 @@ function RootDocument() {
     </ConvexBetterAuthProvider>
   );
 }
+
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  beforeLoad: async (ctx) => {
+    const token = await getAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
+  },
+
+  component: RootDocument,
+  head: () => ({
+    links: [
+      {
+        href: appCss,
+        rel: "stylesheet",
+      },
+    ],
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        content: "width=device-width, initial-scale=1",
+        name: "viewport",
+      },
+      {
+        title: "My App",
+      },
+    ],
+  }),
+});

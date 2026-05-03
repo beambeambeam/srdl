@@ -7,10 +7,6 @@ import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
-});
-
 function RouteComponent() {
   const [showSignIn, setShowSignIn] = useState(false);
   const privateData = useQuery(api.privateData.get);
@@ -37,3 +33,7 @@ function RouteComponent() {
     </>
   );
 }
+
+export const Route = createFileRoute("/dashboard")({
+  component: RouteComponent,
+});

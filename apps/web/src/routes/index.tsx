@@ -3,10 +3,6 @@ import { api } from "@srdl/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
-
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
  ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
@@ -25,6 +21,16 @@ const TITLE_TEXT = `
 
 function HomeComponent() {
   const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
+  let statusClassName = "bg-red-500";
+  let statusText = "Error";
+
+  if (healthCheck.isLoading) {
+    statusClassName = "bg-orange-400";
+    statusText = "Checking...";
+  } else if (healthCheck.data === "OK") {
+    statusClassName = "bg-green-500";
+    statusText = "Connected";
+  }
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -33,19 +39,15 @@ function HomeComponent() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
           <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${healthCheck.data === "OK" ? "bg-green-500" : healthCheck.isLoading ? "bg-orange-400" : "bg-red-500"}`}
-            />
-            <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data === "OK"
-                  ? "Connected"
-                  : "Error"}
-            </span>
+            <div className={`h-2 w-2 rounded-full ${statusClassName}`} />
+            <span className="text-muted-foreground text-sm">{statusText}</span>
           </div>
         </section>
       </div>
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});

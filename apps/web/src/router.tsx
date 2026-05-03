@@ -20,24 +20,24 @@ export function getRouter() {
   const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        queryKeyHashFn: convexQueryClient.hashFn(),
         queryFn: convexQueryClient.queryFn(),
+        queryKeyHashFn: convexQueryClient.hashFn(),
       },
     },
   });
   convexQueryClient.connect(queryClient);
 
   const router = createTanStackRouter({
-    routeTree,
-    defaultPreload: "intent",
-    defaultPendingComponent: () => <Loader />,
+    context: { convexQueryClient, queryClient },
     defaultNotFoundComponent: () => <div>Not Found</div>,
-    context: { queryClient, convexQueryClient },
+    defaultPendingComponent: () => <Loader />,
+    defaultPreload: "intent",
+    routeTree,
   });
 
   setupRouterSsrQueryIntegration({
-    router,
     queryClient,
+    router,
   });
 
   return router;

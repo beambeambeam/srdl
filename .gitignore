@@ -49,3 +49,5 @@ coverage
 .cache
 tmp
 temp
+
+packages/backend/convex/_generated/ai

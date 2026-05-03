@@ -3,6 +3,6 @@ import { env } from "@srdl/env/web";
 
 export const { handler, getToken, fetchAuthQuery, fetchAuthMutation, fetchAuthAction } =
   convexBetterAuthReactStart({
-    convexUrl: env.VITE_CONVEX_URL,
     convexSiteUrl: env.VITE_CONVEX_SITE_URL,
+    convexUrl: env.VITE_CONVEX_URL,
   });
