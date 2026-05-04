@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import SignInForm from "@/features/sign-in/form";
+import { NO_INDEX_META } from "@/lib/seo";
 
 function SignInPage() {
   return (
@@ -12,4 +13,7 @@ function SignInPage() {
 
 export const Route = createFileRoute("/sign-in")({
   component: SignInPage,
+  head: () => ({
+    meta: [...NO_INDEX_META],
+  }),
 });

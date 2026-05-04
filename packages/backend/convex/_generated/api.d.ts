@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as api_ from "../api.js";
 import type * as auth from "../auth.js";
 import type * as games_roomPlayerGuesses from "../games/roomPlayerGuesses.js";
 import type * as games_roomPlayerSubmissions from "../games/roomPlayerSubmissions.js";
@@ -26,6 +27,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  api: typeof api_;
   auth: typeof auth;
   "games/roomPlayerGuesses": typeof games_roomPlayerGuesses;
   "games/roomPlayerSubmissions": typeof games_roomPlayerSubmissions;

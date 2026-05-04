@@ -2,6 +2,8 @@ import { AdminSidebar } from "@/features/admin/sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@srdl/ui/components/sidebar";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
+import { NO_INDEX_META } from "@/lib/seo";
+
 function AdminLayout() {
   return (
     <SidebarProvider>
@@ -28,4 +30,7 @@ export const Route = createFileRoute("/admin")({
     }
   },
   component: AdminLayout,
+  head: () => ({
+    meta: [...NO_INDEX_META],
+  }),
 });
