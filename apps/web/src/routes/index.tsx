@@ -29,7 +29,7 @@ function HomeComponent() {
           </div>
         </CardContent>
       </Card> */}
-      <Link to="/">
+      <Link to="/room">
         <Button>Let's Play!</Button>
       </Link>
     </div>

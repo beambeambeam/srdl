@@ -48,10 +48,10 @@ export interface DataTableArgsConfig<
   TFilters extends Record<string, unknown>,
 > {
   sortIds: readonly TSortId[];
-  defaultSort?: Array<{
+  defaultSort?: {
     desc: boolean;
     id: TSortId;
-  }>;
+  }[];
   filters: {
     [K in keyof TFilters]: DataTableFilterMapper<TFilters[K]>;
   };
@@ -64,10 +64,10 @@ export interface DataTableArgsResult<
   filters: TFilters;
   page: number;
   perPage: number;
-  sort: Array<{
+  sort: {
     desc: boolean;
     id: TSortId;
-  }>;
+  }[];
 }
 
 interface UseDataTableQueryStateProps<TData> {
@@ -387,13 +387,13 @@ export function useDataTable<
 
   const tableArgs = React.useMemo<DataTableArgsResult<TSortId, TFilters> | undefined>(() => {
     if (!tableArgsConfig) {
-      return undefined;
+      return;
     }
 
     const allowedSortIds = new Set<string>(tableArgsConfig.sortIds);
     const mappedSort =
       queryState.sorting.length > 0
-        ? queryState.sorting.reduce<Array<{ desc: boolean; id: TSortId }>>((sorts, sort) => {
+        ? queryState.sorting.reduce<{ desc: boolean; id: TSortId }[]>((sorts, sort) => {
             if (allowedSortIds.has(sort.id)) {
               sorts.push({
                 desc: sort.desc,

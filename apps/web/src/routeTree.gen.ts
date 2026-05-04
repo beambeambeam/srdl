@@ -10,16 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as RoomRouteImport } from './routes/room'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RoomIdRouteImport } from './routes/room.$id'
 import { Route as AdminRoomRouteImport } from './routes/admin/room'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AdminRoomIdRouteImport } from './routes/admin/room.$id'
+import { Route as AdminRoomIdProjectorRouteImport } from './routes/admin/room.$id.projector'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomRoute = RoomRouteImport.update({
+  id: '/room',
+  path: '/room',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -37,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomIdRoute = RoomIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RoomRoute,
+} as any)
 const AdminRoomRoute = AdminRoomRouteImport.update({
   id: '/room',
   path: '/room',
@@ -52,34 +66,56 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoomIdRoute = AdminRoomIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminRoomRoute,
+} as any)
+const AdminRoomIdProjectorRoute = AdminRoomIdProjectorRouteImport.update({
+  id: '/projector',
+  path: '/projector',
+  getParentRoute: () => AdminRoomIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/room': typeof RoomRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/admin/room': typeof AdminRoomRoute
+  '/admin/room': typeof AdminRoomRouteWithChildren
+  '/room/$id': typeof RoomIdRoute
+  '/admin/room/$id': typeof AdminRoomIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/room/$id/projector': typeof AdminRoomIdProjectorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/room': typeof RoomRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/admin/room': typeof AdminRoomRoute
+  '/admin/room': typeof AdminRoomRouteWithChildren
+  '/room/$id': typeof RoomIdRoute
+  '/admin/room/$id': typeof AdminRoomIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/room/$id/projector': typeof AdminRoomIdProjectorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/room': typeof RoomRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/admin/room': typeof AdminRoomRoute
+  '/admin/room': typeof AdminRoomRouteWithChildren
+  '/room/$id': typeof RoomIdRoute
+  '/admin/room/$id': typeof AdminRoomIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/room/$id/projector': typeof AdminRoomIdProjectorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,34 +123,47 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/onboarding'
+    | '/room'
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$id'
+    | '/admin/room/$id'
     | '/api/auth/$'
+    | '/admin/room/$id/projector'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/onboarding'
+    | '/room'
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$id'
+    | '/admin/room/$id'
     | '/api/auth/$'
+    | '/admin/room/$id/projector'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/onboarding'
+    | '/room'
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$id'
+    | '/admin/room/$id'
     | '/api/auth/$'
+    | '/admin/room/$id/projector'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  RoomRoute: typeof RoomRouteWithChildren
   SignInRoute: typeof SignInRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -126,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/room': {
+      id: '/room'
+      path: '/room'
+      fullPath: '/room'
+      preLoaderRoute: typeof RoomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -149,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/room/$id': {
+      id: '/room/$id'
+      path: '/$id'
+      fullPath: '/room/$id'
+      preLoaderRoute: typeof RoomIdRouteImport
+      parentRoute: typeof RoomRoute
+    }
     '/admin/room': {
       id: '/admin/room'
       path: '/room'
@@ -170,27 +233,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/room/$id': {
+      id: '/admin/room/$id'
+      path: '/$id'
+      fullPath: '/admin/room/$id'
+      preLoaderRoute: typeof AdminRoomIdRouteImport
+      parentRoute: typeof AdminRoomRoute
+    }
+    '/admin/room/$id/projector': {
+      id: '/admin/room/$id/projector'
+      path: '/projector'
+      fullPath: '/admin/room/$id/projector'
+      preLoaderRoute: typeof AdminRoomIdProjectorRouteImport
+      parentRoute: typeof AdminRoomIdRoute
+    }
   }
 }
 
+interface AdminRoomIdRouteChildren {
+  AdminRoomIdProjectorRoute: typeof AdminRoomIdProjectorRoute
+}
+
+const AdminRoomIdRouteChildren: AdminRoomIdRouteChildren = {
+  AdminRoomIdProjectorRoute: AdminRoomIdProjectorRoute,
+}
+
+const AdminRoomIdRouteWithChildren = AdminRoomIdRoute._addFileChildren(
+  AdminRoomIdRouteChildren,
+)
+
+interface AdminRoomRouteChildren {
+  AdminRoomIdRoute: typeof AdminRoomIdRouteWithChildren
+}
+
+const AdminRoomRouteChildren: AdminRoomRouteChildren = {
+  AdminRoomIdRoute: AdminRoomIdRouteWithChildren,
+}
+
+const AdminRoomRouteWithChildren = AdminRoomRoute._addFileChildren(
+  AdminRoomRouteChildren,
+)
+
 interface AdminRouteRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
-  AdminRoomRoute: typeof AdminRoomRoute
+  AdminRoomRoute: typeof AdminRoomRouteWithChildren
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
-  AdminRoomRoute: AdminRoomRoute,
+  AdminRoomRoute: AdminRoomRouteWithChildren,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface RoomRouteChildren {
+  RoomIdRoute: typeof RoomIdRoute
+}
+
+const RoomRouteChildren: RoomRouteChildren = {
+  RoomIdRoute: RoomIdRoute,
+}
+
+const RoomRouteWithChildren = RoomRoute._addFileChildren(RoomRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  RoomRoute: RoomRouteWithChildren,
   SignInRoute: SignInRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

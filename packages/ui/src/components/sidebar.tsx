@@ -4,6 +4,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
 import type { VariantProps } from "class-variance-authority";
 
+import { writeLocalStorageValue } from "@srdl/ui/hooks/use-local-storage";
 import { useIsMobile } from "@srdl/ui/hooks/use-mobile";
 import { cn } from "@srdl/ui/lib/utils";
 import { Button } from "@srdl/ui/components/button";
@@ -77,7 +78,9 @@ function SidebarProvider({
       }
 
       // Persist the sidebar state in the browser.
-      window.localStorage.setItem(SIDEBAR_COOKIE_NAME, String(nextOpen));
+      writeLocalStorageValue(SIDEBAR_COOKIE_NAME, String(nextOpen), {
+        serializer: (serializedValue) => serializedValue,
+      });
     },
     [setOpenProp, sidebarOpen],
   );

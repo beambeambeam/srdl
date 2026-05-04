@@ -1,0 +1,104 @@
+import Showblock from "@/features/admin/room/show-block";
+import { Badge } from "@srdl/ui/components/badge";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
+import type { JSX } from "react";
+
+interface ActivePrompt {
+  answer: string;
+  playerId: string;
+  playerName: string;
+  questionIndex: number;
+  roomState: string;
+  selectedAt: number;
+  submissionId: string;
+}
+
+interface ProjectorPhasePanelProps {
+  activePrompt: ActivePrompt | null;
+  phase: "answer" | "guess" | "show" | "unknown" | "waiting" | "wrap-up";
+  questionIndex: number | null;
+}
+
+export function ProjectorPhasePanel({
+  activePrompt,
+  phase,
+}: ProjectorPhasePanelProps): JSX.Element {
+  let phaseLabel: string | null = null;
+
+  if (phase === "guess") {
+    phaseLabel = "Guessing Time!";
+  } else if (phase === "answer") {
+    phaseLabel = "Answer Reveal";
+  }
+
+  if (phase === "waiting") {
+    return (
+      <Empty className="border-0">
+        <EmptyHeader className="max-w-2xl gap-4">
+          <EmptyTitle className="text-4xl sm:text-5xl">Waiting for submissions</EmptyTitle>
+          <EmptyDescription className="text-base sm:text-lg">
+            Players are filling in their questions. Move to a show state once answers are ready.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (phase === "wrap-up") {
+    return (
+      <Empty className="border-0">
+        <EmptyHeader className="max-w-2xl gap-4">
+          <EmptyTitle className="text-4xl sm:text-5xl">Thank You for join our Campaign</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (phase === "unknown") {
+    return (
+      <Empty className="border-0">
+        <EmptyHeader className="max-w-2xl gap-4">
+          <EmptyTitle className="text-4xl sm:text-5xl">Projector state unavailable</EmptyTitle>
+          <EmptyDescription className="text-base sm:text-lg">
+            This room is in a state the projector does not understand yet.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (activePrompt === null) {
+    return (
+      <Empty className="border-0">
+        <EmptyHeader className="max-w-2xl gap-4">
+          <Badge className="px-4 py-1 text-sm uppercase tracking-[0.24em]" variant="secondary">
+            Prompt Missing
+          </Badge>
+          <EmptyTitle className="text-4xl sm:text-5xl">Prompt unavailable</EmptyTitle>
+          <EmptyDescription className="text-base sm:text-lg">
+            This room entered a prompt state without a selected player. Move the room state again to
+            regenerate the prompt.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  return (
+    <section className="flex w-full max-w-6xl flex-col items-center gap-6 text-center">
+      {phaseLabel === null ? null : (
+        <div className="space-y-2">
+          <Badge className="px-4 py-1 text-sm uppercase tracking-[0.24em]" variant="secondary">
+            {phaseLabel}
+          </Badge>
+        </div>
+      )}
+      <Showblock answer={activePrompt.answer} />
+      {phase === "answer" ? (
+        <p className="font-heading text-4xl leading-tight sm:text-5xl lg:text-6xl">
+          {activePrompt.playerName}
+        </p>
+      ) : null}
+    </section>
+  );
+}

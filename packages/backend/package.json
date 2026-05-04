@@ -6,6 +6,13 @@
   "author": "",
   "type": "module",
   "exports": {
+    "./convex/client": {
+      "module": "./convex-client.ts",
+      "browser": "./convex-client.ts",
+      "development": "./convex-client.ts",
+      "import": "./convex-client.ts",
+      "default": "./convex-client.ts"
+    },
     "./convex/api": "./convex/api.ts"
   },
   "scripts": {

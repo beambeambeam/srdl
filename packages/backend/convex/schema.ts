@@ -1,9 +1,59 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+import { ROOM_STATES } from "./roomStates";
+
+const roomStateValidators = ROOM_STATES.map((state) => v.literal(state));
+
 export default defineSchema({
+  roomPlayerGuesses: defineTable({
+    activePromptSubmissionId: v.id("roomPlayerSubmissions"),
+    createdAt: v.number(),
+    guessedPlayerId: v.string(),
+    guessedPlayerName: v.string(),
+    guesserPlayerId: v.string(),
+    guesserPlayerName: v.string(),
+    questionIndex: v.number(),
+    roomId: v.id("rooms"),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_question", ["roomId", "questionIndex"])
+    .index("by_room_question_guesser", ["roomId", "questionIndex", "guesserPlayerId"]),
+  roomPlayerSubmissions: defineTable({
+    answers: v.array(v.string()),
+    playerId: v.string(),
+    playerName: v.string(),
+    roomId: v.id("rooms"),
+    submittedAt: v.number(),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_player", ["roomId", "playerId"]),
   rooms: defineTable({
+    activePrompt: v.optional(
+      v.object({
+        answer: v.string(),
+        playerId: v.string(),
+        playerName: v.string(),
+        questionIndex: v.number(),
+        roomState: v.union(...roomStateValidators),
+        selectedAt: v.number(),
+        submissionId: v.id("roomPlayerSubmissions"),
+      }),
+    ),
+    code: v.string(),
+    promptSelections: v.optional(
+      v.array(
+        v.object({
+          answer: v.string(),
+          playerId: v.string(),
+          playerName: v.string(),
+          questionIndex: v.number(),
+          selectedAt: v.number(),
+          submissionId: v.id("roomPlayerSubmissions"),
+        }),
+      ),
+    ),
+    state: v.union(...roomStateValidators),
     title: v.string(),
-    titleLower: v.string(),
-  }).index("by_title_lower", ["titleLower"]),
+  }).index("by_code", ["code"]),
 });
