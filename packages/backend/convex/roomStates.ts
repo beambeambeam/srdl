@@ -15,6 +15,6 @@ export const ROOM_STATES = [
   "WRAP UP",
 ] as const;
 
-export const DEFAULT_ROOM_STATE = ROOM_STATES[0];
+export const [DEFAULT_ROOM_STATE] = ROOM_STATES;
 
 export type RoomState = (typeof ROOM_STATES)[number];
