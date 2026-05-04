@@ -10,6 +10,8 @@ const DEFAULT_SORT = {
 const MAX_PAGE_SIZE = 100;
 // This example intentionally bounds reads so it stays safe before moving to a cursor-first design.
 const MAX_TABLE_SCAN = 200;
+const ROOM_CODE_REGEX = /^\d{6}$/;
+const MAX_ROOM_CODE_GENERATION_ATTEMPTS = 20;
 
 interface RoomSort {
   desc: boolean;
@@ -24,6 +26,11 @@ const getNormalizedPerPage = (perPage: number): number =>
   Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(perPage)));
 
 const getNormalizedTitle = (title: string): string => title.trim();
+const isValidRoomCode = (code: string): boolean => ROOM_CODE_REGEX.test(code);
+const generateSixDigitRoomCode = (): string =>
+  Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, "0");
 
 const getNormalizedTitleFilter = (title: string | null | undefined): string | null => {
   if (!title) {
@@ -97,6 +104,7 @@ function sortRoomDocumentsByCreationTime(
 
 export const create = mutation({
   args: {
+    code: v.optional(v.string()),
     title: v.string(),
   },
   handler: async (ctx, args) => {
@@ -106,7 +114,50 @@ export const create = mutation({
       throw new Error("Room title is required.");
     }
 
+    let code: string;
+
+    if (args.code === undefined) {
+      let uniqueCode: string | null = null;
+
+      for (let attempt = 0; attempt < MAX_ROOM_CODE_GENERATION_ATTEMPTS; attempt += 1) {
+        const candidateCode = generateSixDigitRoomCode();
+        const existingRoom = await ctx.db
+          .query("rooms")
+          .withIndex("by_code", (indexQuery) => indexQuery.eq("code", candidateCode))
+          .unique();
+
+        if (!existingRoom) {
+          uniqueCode = candidateCode;
+          break;
+        }
+      }
+
+      if (uniqueCode === null) {
+        throw new Error("Failed to generate a unique room code.");
+      }
+
+      code = uniqueCode;
+    } else {
+      const providedCode = args.code;
+
+      if (!isValidRoomCode(providedCode)) {
+        throw new Error("Room code must be 6 digits.");
+      }
+
+      const existingRoom = await ctx.db
+        .query("rooms")
+        .withIndex("by_code", (indexQuery) => indexQuery.eq("code", providedCode))
+        .unique();
+
+      if (existingRoom) {
+        throw new Error("Room code already exists.");
+      }
+
+      code = providedCode;
+    }
+
     return await ctx.db.insert("rooms", {
+      code,
       title,
     });
   },
@@ -152,6 +203,7 @@ export const getTablePage = query({
       pageCount,
       perPage,
       rows: pagedRows.map((room: RoomDocument) => ({
+        code: room.code,
         createdAt: new Date(room._creationTime).toISOString(),
         id: room._id,
         title: room.title,

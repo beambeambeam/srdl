@@ -1,4 +1,12 @@
 import { convexQuery } from "@convex-dev/react-query";
+import { Button } from "@srdl/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@srdl/ui/components/dialog";
 import { Text } from "lucide-react";
 import { api } from "@srdl/backend/convex/api";
 import { DataTableSkeleton } from "@srdl/ui/components/data-table/skeleton";
@@ -9,10 +17,17 @@ import { DataTable } from "@srdl/ui/components/data-table";
 import { DataTableColumnHeader } from "@srdl/ui/components/data-table/column-header";
 import { DataTableToolbar } from "@srdl/ui/components/data-table/toolbar";
 import { useDataTable, useDataTableQueryState } from "@srdl/ui/hooks/use-data-table";
-import { useMemo } from "react";
-import { Button } from "@srdl/ui/components/button";
+import { useMemo, useState } from "react";
+
+import CreateRoomForm from "@/features/admin/room/create-room-form";
+
+const generatePreviewRoomCode = (): string =>
+  Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, "0");
 
 interface RoomRow {
+  code: string;
   id: string;
   title: string;
   createdAt: string;
@@ -37,6 +52,9 @@ const getTitleFilter = (value: string | string[] | null | undefined): string | n
 };
 
 export function AdminRoomTable() {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [createRoomCode, setCreateRoomCode] = useState(generatePreviewRoomCode);
+
   const columns = useMemo<ColumnDef<RoomRow>[]>(
     () => [
       {
@@ -50,6 +68,17 @@ export function AdminRoomTable() {
           label: "Title",
           placeholder: "Search titles...",
           variant: "text",
+        },
+      },
+      {
+        accessorKey: "code",
+        cell: ({ row }) => <div className="font-mono text-sm">{row.getValue("code")}</div>,
+        enableColumnFilter: false,
+        enableSorting: false,
+        header: () => "Code",
+        id: "code",
+        meta: {
+          label: "Code",
         },
       },
       {
@@ -103,6 +132,25 @@ export function AdminRoomTable() {
     placeholderData: keepPreviousData,
   });
 
+  const handleCreateDialogChange = (open: boolean): void => {
+    setIsCreateDialogOpen(open);
+
+    if (open) {
+      setCreateRoomCode(generatePreviewRoomCode());
+    }
+  };
+
+  const handleCreateSuccess = (): void => {
+    setIsCreateDialogOpen(false);
+    setCreateRoomCode(generatePreviewRoomCode());
+    void roomPage.refetch();
+  };
+
+  const handleCreateCancel = (): void => {
+    setIsCreateDialogOpen(false);
+    setCreateRoomCode(generatePreviewRoomCode());
+  };
+
   const { table } = useDataTable({
     columns,
     data: roomPage.data?.rows ?? [],
@@ -118,7 +166,7 @@ export function AdminRoomTable() {
   });
 
   if (roomPage.isPending && !roomPage.data) {
-    return <DataTableSkeleton columnCount={2} filterCount={1} />;
+    return <DataTableSkeleton columnCount={3} filterCount={1} />;
   }
 
   if (roomPage.error) {
@@ -131,9 +179,25 @@ export function AdminRoomTable() {
 
   return (
     <section className="flex h-full min-h-0 flex-col">
+      <Dialog onOpenChange={handleCreateDialogChange} open={isCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create room</DialogTitle>
+            <DialogDescription>
+              Add a room title and review the generated 6-digit room code.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateRoomForm
+            initialCode={createRoomCode}
+            key={createRoomCode}
+            onCancel={handleCreateCancel}
+            onSuccess={handleCreateSuccess}
+          />
+        </DialogContent>
+      </Dialog>
       <DataTable table={table}>
         <DataTableToolbar table={table}>
-          <Button>Create New Rooms!</Button>
+          <Button onClick={() => handleCreateDialogChange(true)}>Create Room</Button>
         </DataTableToolbar>
       </DataTable>
     </section>
