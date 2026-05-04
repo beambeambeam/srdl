@@ -16,6 +16,17 @@ export default defineSchema({
     .index("by_room", ["roomId"])
     .index("by_room_player", ["roomId", "playerId"]),
   rooms: defineTable({
+    activePrompt: v.optional(
+      v.object({
+        answer: v.string(),
+        playerId: v.string(),
+        playerName: v.string(),
+        questionIndex: v.number(),
+        roomState: v.union(...roomStateValidators),
+        selectedAt: v.number(),
+        submissionId: v.id("roomPlayerSubmissions"),
+      }),
+    ),
     code: v.string(),
     state: v.union(...roomStateValidators),
     title: v.string(),

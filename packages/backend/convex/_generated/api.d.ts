@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as games_roomPlayerSubmissions from "../games/roomPlayerSubmissions.js";
+import type * as games_roomStatePrompts from "../games/roomStatePrompts.js";
 import type * as games_rooms from "../games/rooms.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
@@ -26,6 +27,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "games/roomPlayerSubmissions": typeof games_roomPlayerSubmissions;
+  "games/roomStatePrompts": typeof games_roomStatePrompts;
   "games/rooms": typeof games_rooms;
   healthCheck: typeof healthCheck;
   http: typeof http;

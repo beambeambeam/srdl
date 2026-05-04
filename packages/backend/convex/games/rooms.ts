@@ -2,8 +2,15 @@ import { v } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
-import { ROOM_STATES, DEFAULT_ROOM_STATE } from '../roomStates';
-import type { RoomState } from '../roomStates';
+import { DEFAULT_ROOM_STATE, ROOM_STATES } from "../roomStates";
+import type { RoomState } from "../roomStates";
+import {
+  getQuestionIndexFromRoomState,
+  isAnswerState,
+  isGuessState,
+  isPromptDrivenState,
+  isShowState,
+} from "./roomStatePrompts";
 
 const DEFAULT_SORT = {
   desc: true,
@@ -21,6 +28,7 @@ interface RoomSort {
 }
 
 type RoomDocument = Doc<"rooms">;
+type RoomPlayerSubmissionDocument = Doc<"roomPlayerSubmissions">;
 
 const getCurrentRoomStateIndex = (state: string): number => ROOM_STATES.indexOf(state as RoomState);
 
@@ -35,6 +43,74 @@ const generateSixDigitRoomCode = (): string =>
   Math.floor(Math.random() * 1_000_000)
     .toString()
     .padStart(6, "0");
+const getRandomSubmission = (
+  submissions: RoomPlayerSubmissionDocument[],
+): RoomPlayerSubmissionDocument =>
+  submissions[Math.floor(Math.random() * submissions.length)] as RoomPlayerSubmissionDocument;
+
+const getProjectorPhase = (
+  state: string,
+): "answer" | "guess" | "show" | "unknown" | "waiting" | "wrap-up" => {
+  if (state === "WAITING") {
+    return "waiting";
+  }
+
+  if (state === "WRAP UP") {
+    return "wrap-up";
+  }
+
+  if (isShowState(state)) {
+    return "show";
+  }
+
+  if (isGuessState(state)) {
+    return "guess";
+  }
+
+  if (isAnswerState(state)) {
+    return "answer";
+  }
+
+  return "unknown";
+};
+
+const shouldPreserveActivePrompt = (
+  room: RoomDocument,
+  nextState: RoomState,
+  nextQuestionIndex: number | null,
+): boolean => {
+  if (room.activePrompt === undefined || nextQuestionIndex === null) {
+    return false;
+  }
+
+  return (
+    isPromptDrivenState(nextState) &&
+    room.activePrompt.questionIndex === nextQuestionIndex &&
+    getQuestionIndexFromRoomState(room.activePrompt.roomState) === nextQuestionIndex
+  );
+};
+
+const buildActivePrompt = (
+  submission: RoomPlayerSubmissionDocument,
+  nextState: RoomState,
+  questionIndex: 0 | 1 | 2 | 3,
+) => {
+  const answer = submission.answers[questionIndex];
+
+  if (answer === undefined || answer.trim() === "") {
+    throw new Error("Selected player is missing an answer for this question.");
+  }
+
+  return {
+    answer,
+    playerId: submission.playerId,
+    playerName: submission.playerName,
+    questionIndex,
+    roomState: nextState,
+    selectedAt: Date.now(),
+    submissionId: submission._id,
+  };
+};
 
 const getNormalizedTitleFilter = (title: string | null | undefined): string | null => {
   if (!title) {
@@ -210,19 +286,18 @@ export const getTablePage = query({
     const titleFilter = getNormalizedTitleFilter(args.filters.title);
     const roomDocuments = await ctx.db.query("rooms").take(MAX_TABLE_SCAN);
     const stateFilter = getNormalizedStateFilter(args.filters.state);
-    const stateFilterValues = typeof stateFilter === "string"
-      ? [stateFilter]
-      : stateFilter;
+    const stateFilterValues = typeof stateFilter === "string" ? [stateFilter] : stateFilter;
     const filteredRoomDocuments = titleFilter
       ? roomDocuments.filter((room: RoomDocument) =>
           getSortableRoomTitle(room.title).startsWith(titleFilter),
         )
       : roomDocuments;
-    const stateFilteredRoomDocuments = stateFilterValues !== null
-      ? filteredRoomDocuments.filter((room: RoomDocument) =>
-          stateFilterValues.includes(room.state.toLowerCase()),
-        )
-      : filteredRoomDocuments;
+    const stateFilteredRoomDocuments =
+      stateFilterValues === null
+        ? filteredRoomDocuments
+        : filteredRoomDocuments.filter((room: RoomDocument) =>
+            stateFilterValues.includes(room.state.toLowerCase()),
+          );
     const sortedRoomDocuments =
       titleFilter || primarySort.id === "title"
         ? sortFilteredRoomDocuments(stateFilteredRoomDocuments, primarySort)
@@ -267,6 +342,35 @@ export const getByCode = query({
       .unique(),
 });
 
+export const getProjectorState = query({
+  args: {
+    roomId: v.id("rooms"),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+
+    if (room === null) {
+      return null;
+    }
+
+    const questionIndex = getQuestionIndexFromRoomState(room.state);
+    const phase = getProjectorPhase(room.state);
+    const isPromptState = isPromptDrivenState(room.state);
+    const activePrompt =
+      isPromptState && room.activePrompt !== undefined ? room.activePrompt : null;
+
+    return {
+      activePrompt,
+      phase,
+      questionIndex,
+      roomCode: room.code,
+      roomId: room._id,
+      roomState: room.state,
+      roomTitle: room.title,
+    };
+  },
+});
+
 export const changeStateByDelta = mutation({
   args: {
     direction: v.union(v.literal("left"), v.literal("right")),
@@ -292,8 +396,62 @@ export const changeStateByDelta = mutation({
       return room.state;
     }
 
+    const nextState = ROOM_STATES[nextStateIndex];
+    const nextQuestionIndex = getQuestionIndexFromRoomState(nextState);
+
+    if (nextState === "WAITING" || nextState === "WRAP UP") {
+      await ctx.db.patch(args.id, {
+        activePrompt: undefined,
+        state: nextState,
+      });
+
+      return nextState;
+    }
+
+    if (shouldPreserveActivePrompt(room, nextState, nextQuestionIndex)) {
+      const { activePrompt } = room;
+
+      if (activePrompt === undefined) {
+        throw new Error("Missing active prompt for prompt-driven state transition.");
+      }
+
+      await ctx.db.patch(args.id, {
+        activePrompt: {
+          ...activePrompt,
+          roomState: nextState,
+        },
+        state: nextState,
+      });
+
+      return nextState;
+    }
+
+    if (isShowState(nextState)) {
+      const submissions = await ctx.db
+        .query("roomPlayerSubmissions")
+        .withIndex("by_room", (queryBuilder) => queryBuilder.eq("roomId", args.id))
+        .collect();
+
+      if (submissions.length === 0) {
+        throw new Error("Cannot enter show state without player submissions.");
+      }
+
+      if (nextQuestionIndex === null) {
+        throw new Error(`Unable to determine question index for state ${nextState}.`);
+      }
+
+      const selectedSubmission = getRandomSubmission(submissions);
+
+      await ctx.db.patch(args.id, {
+        activePrompt: buildActivePrompt(selectedSubmission, nextState, nextQuestionIndex),
+        state: nextState,
+      });
+
+      return nextState;
+    }
+
     return await ctx.db.patch(args.id, {
-      state: ROOM_STATES[nextStateIndex],
+      state: nextState,
     });
   },
 });
