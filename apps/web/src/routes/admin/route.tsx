@@ -1,6 +1,6 @@
 import { AdminSidebar } from "@/features/admin/sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@srdl/ui/components/sidebar";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 function AdminLayout() {
   return (
@@ -19,13 +19,13 @@ function AdminLayout() {
 }
 
 export const Route = createFileRoute("/admin")({
-  // beforeLoad: ({ context }) => {
-  //   if (!context.isAuthenticated) {
-  //     throw redirect({
-  //       replace: true,
-  //       to: "/",
-  //     });
-  //   }
-  // },
+  beforeLoad: ({ context }) => {
+    if (!context.isAuthenticated) {
+      throw redirect({
+        replace: true,
+        to: "/",
+      });
+    }
+  },
   component: AdminLayout,
 });
