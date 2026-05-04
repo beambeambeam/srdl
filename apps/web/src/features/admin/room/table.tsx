@@ -22,6 +22,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import CreateRoomForm from "@/features/admin/room/create-room-form";
+import { ROOM_STATES, getRoomStateLabel } from "@/shared/games";
 
 const generatePreviewRoomCode = (): string =>
   Math.floor(Math.random() * 1_000_000)
@@ -35,25 +36,6 @@ interface RoomRow {
   title: string;
   createdAt: string;
 }
-
-const ROOM_STATE_LABELS: Record<string, string> = {
-  "ANSWER-1ST-QUESTION": "Answer Question 1",
-  "ANSWER-2ND-QUESTION": "Answer Question 2",
-  "ANSWER-3RD-QUESTION": "Answer Question 3",
-  "ANSWER-4TH-QUESTION": "Answer Question 4",
-  "GUESS-1ST-QUESTION": "Guess Question 1",
-  "GUESS-2ND-QUESTION": "Guess Question 2",
-  "GUESS-3RD-QUESTION": "Guess Question 3",
-  "GUESS-4TH-QUESTION": "Guess Question 4",
-  "SHOW-1ST-QUESTION": "Show Question 1",
-  "SHOW-2ND-QUESTION": "Show Question 2",
-  "SHOW-3RD-QUESTION": "Show Question 3",
-  "SHOW-4TH-QUESTION": "Show Question 4",
-  WAITING: "Waiting",
-  "WRAP UP": "Wrap Up",
-};
-
-const getRoomStateLabel = (state: string): string => ROOM_STATE_LABELS[state] ?? state;
 
 const getTitleFilter = (value: string | string[] | null | undefined): string | null => {
   if (typeof value !== "string") {
@@ -136,7 +118,7 @@ export function AdminRoomTable() {
         meta: {
           icon: Text,
           label: "State",
-          options: Object.keys(ROOM_STATE_LABELS).map((stateValue) => ({
+          options: ROOM_STATES.map((stateValue) => ({
             label: getRoomStateLabel(stateValue),
             value: stateValue,
           })),

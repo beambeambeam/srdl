@@ -13,25 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
-
-const ROOM_STATE_LABELS: Record<string, string> = {
-  "ANSWER-1ST-QUESTION": "Answer Question 1",
-  "ANSWER-2ND-QUESTION": "Answer Question 2",
-  "ANSWER-3RD-QUESTION": "Answer Question 3",
-  "ANSWER-4TH-QUESTION": "Answer Question 4",
-  "GUESS-1ST-QUESTION": "Guess Question 1",
-  "GUESS-2ND-QUESTION": "Guess Question 2",
-  "GUESS-3RD-QUESTION": "Guess Question 3",
-  "GUESS-4TH-QUESTION": "Guess Question 4",
-  "SHOW-1ST-QUESTION": "Show Question 1",
-  "SHOW-2ND-QUESTION": "Show Question 2",
-  "SHOW-3RD-QUESTION": "Show Question 3",
-  "SHOW-4TH-QUESTION": "Show Question 4",
-  WAITING: "Waiting",
-  "WRAP UP": "Wrap Up",
-};
-
-const getRoomStateLabel = (state: string): string => ROOM_STATE_LABELS[state] ?? state;
+import { getRoomStateLabel } from "@/shared/games";
 
 function RouteComponent() {
   const { code } = useParams({
