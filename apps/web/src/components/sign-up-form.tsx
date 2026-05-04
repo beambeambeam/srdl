@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@srdl/ui/components/button";
 import { Input } from "@srdl/ui/components/input";
 import { Label } from "@srdl/ui/components/label";
@@ -32,7 +34,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
           },
           onSuccess: () => {
             navigate({
-              to: "/dashboard",
+              to: "/admin/dashboard",
             });
             toast.success("Sign up successful");
           },
