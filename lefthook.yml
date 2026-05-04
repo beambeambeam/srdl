@@ -5,10 +5,14 @@ pre-commit:
   parallel: true
   jobs:
     - name: oxlint
-      run: bun oxlint --fix {staged_files}
+      run: |
+        files=$(printf '%s\n' {staged_files} | rg -v '(^apps/web/src/routeTree\.gen\.ts$|(^|/)_generated/|\.gen\.(ts|tsx|js|jsx|d\.ts)$)' || true)
+        [ -z "$files" ] || bun oxlint --fix $files
       stage_fixed: true
     - name: oxfmt
-      run: bun oxfmt --write {staged_files}
+      run: |
+        files=$(printf '%s\n' {staged_files} | rg -v '(^apps/web/src/routeTree\.gen\.ts$|(^|/)_generated/|\.gen\.(ts|tsx|js|jsx|d\.ts)$)' || true)
+        [ -z "$files" ] || bun oxfmt --write $files
       stage_fixed: true
 
 commit-msg:
