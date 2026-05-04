@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
 
 import { RoomStatePanel } from "@/features/room/state-panel";
+import { NO_INDEX_META } from "@/lib/seo";
 
 const ROOM_CODE_PATTERN = /^\d{6}$/;
 
@@ -143,4 +144,7 @@ function RouteComponent() {
 
 export const Route = createFileRoute("/room/$id")({
   component: RouteComponent,
+  head: () => ({
+    meta: [...NO_INDEX_META],
+  }),
 });

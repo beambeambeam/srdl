@@ -17,6 +17,7 @@ import { OnboardingGate } from "@/features/on-boarding/gate";
 import { NuqsTanstackRouterAdapter } from "@/lib/nuqs-tanstack-router";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, THEME_COLOR } from "@/lib/seo";
 
 import appCss from "../index.css?url";
 
@@ -77,6 +78,30 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         href: appCss,
         rel: "stylesheet",
       },
+      {
+        href: "/favicon/favicon.svg",
+        rel: "icon",
+        type: "image/svg+xml",
+      },
+      {
+        href: "/favicon/favicon-96x96.png",
+        rel: "icon",
+        sizes: "96x96",
+        type: "image/png",
+      },
+      {
+        href: "/favicon/favicon.ico",
+        rel: "shortcut icon",
+      },
+      {
+        href: "/favicon/apple-touch-icon.png",
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+      },
+      {
+        href: "/favicon/site.webmanifest",
+        rel: "manifest",
+      },
     ],
     meta: [
       {
@@ -87,7 +112,23 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         name: "viewport",
       },
       {
-        title: "My App",
+        title: DEFAULT_TITLE,
+      },
+      {
+        content: DEFAULT_DESCRIPTION,
+        name: "description",
+      },
+      {
+        content: THEME_COLOR,
+        name: "theme-color",
+      },
+      {
+        content: SITE_NAME,
+        name: "application-name",
+      },
+      {
+        content: SITE_NAME,
+        name: "apple-mobile-web-app-title",
       },
     ],
   }),
