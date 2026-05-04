@@ -114,46 +114,6 @@ const focusFirstInvalidInput = (): void => {
   }
 };
 
-const getFutureStateCopy = (
-  roomState: string,
-): {
-  description: string;
-  title: string;
-} => {
-  if (roomState.startsWith("SHOW-")) {
-    return {
-      description: "Question reveal screens will render here in the next pass.",
-      title: "Question reveal",
-    };
-  }
-
-  if (roomState.startsWith("GUESS-")) {
-    return {
-      description: "Guessing mechanics will be added here for players in a later update.",
-      title: "Guessing phase coming next",
-    };
-  }
-
-  if (roomState.startsWith("ANSWER-")) {
-    return {
-      description: "Answer reveal mechanics will be added here for players in a later update.",
-      title: "Answer reveal phase coming next",
-    };
-  }
-
-  if (roomState === "WRAP UP") {
-    return {
-      description: "This game is complete. Wrap-up results and summaries will appear here later.",
-      title: "Game complete",
-    };
-  }
-
-  return {
-    description: "This room state does not have a player view yet.",
-    title: "State not available",
-  };
-};
-
 export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JSX.Element {
   const [playerId] = useLocalStorage(ONBOARDING_ID_STORAGE_KEY, stringLocalStorageOptions);
   const [playerName] = useLocalStorage(ONBOARDING_NICKNAME_STORAGE_KEY, stringLocalStorageOptions);
@@ -262,19 +222,6 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
         <EmptyHeader>
           <EmptyTitle>Failed to load your form</EmptyTitle>
           <EmptyDescription>We could not load your saved answers right now.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
-  if (!isWaitingState && !isSubmitted) {
-    const stateCopy = getFutureStateCopy(roomState);
-
-    return (
-      <Empty className="border">
-        <EmptyHeader>
-          <EmptyTitle>{stateCopy.title}</EmptyTitle>
-          <EmptyDescription>{stateCopy.description}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
