@@ -10,6 +10,7 @@ import { DataTableColumnHeader } from "@srdl/ui/components/data-table/column-hea
 import { DataTableToolbar } from "@srdl/ui/components/data-table/toolbar";
 import { useDataTable, useDataTableQueryState } from "@srdl/ui/hooks/use-data-table";
 import { useMemo } from "react";
+import { Button } from "@srdl/ui/components/button";
 
 interface RoomRow {
   id: string;
@@ -131,7 +132,9 @@ export function AdminRoomTable() {
   return (
     <section className="flex h-full min-h-0 flex-col">
       <DataTable table={table}>
-        <DataTableToolbar table={table} />
+        <DataTableToolbar table={table}>
+          <Button>Create New Rooms!</Button>
+        </DataTableToolbar>
       </DataTable>
     </section>
   );
