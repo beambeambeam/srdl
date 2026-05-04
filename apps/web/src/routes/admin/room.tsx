@@ -3,7 +3,8 @@ import { AdminRoomTable } from "@/features/admin/room/table";
 
 function AdminRoomPage() {
   return (
-    <main className="h-full min-h-0 overflow-hidden p-4 flex flex-col gap-2">
+    <main className="h-full min-h-0 overflow-hidden p-4 flex flex-col gap-8">
+      <h1 className="font-heading text-3xl">Rooms</h1>
       <AdminRoomTable />
     </main>
   );
