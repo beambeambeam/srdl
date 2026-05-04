@@ -5,6 +5,7 @@ import { Badge } from "@srdl/ui/components/badge";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
 import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+
 import { RoomStateController } from "../../features/admin/room/state-controller";
 
 function AdminRoomDetailPage() {
