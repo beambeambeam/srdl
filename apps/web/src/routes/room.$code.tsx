@@ -13,7 +13,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
-import { getRoomStateLabel } from "@/shared/games";
 
 function RouteComponent() {
   const { code } = useParams({
@@ -82,12 +81,14 @@ function RouteComponent() {
   }
 
   return (
-    <main className="flex h-full min-h-0 items-center justify-center p-4">
-      <div className="space-y-3 text-center">
-        <h1 className="font-heading text-4xl">{roomQuery.data.title}</h1>
-        <Badge variant="secondary">{getRoomStateLabel(roomQuery.data.state)}</Badge>
-        <p className="font-mono text-muted-foreground text-xl">{roomQuery.data.code}</p>
+    <main className="flex h-full min-h-0 flex-col overflow-hidden bg-sidebar p-2">
+      <div className="flex gap-2 text-xs items-center">
+        <p className="font-heading">{roomQuery.data.title}</p>
+        <Badge className="text-xs" variant="outline">
+          {roomQuery.data.code}
+        </Badge>
       </div>
+      <div className="relative flex h-full w-full flex-1 flex-col rounded-xl bg-background shadow-sm"></div>
     </main>
   );
 }
