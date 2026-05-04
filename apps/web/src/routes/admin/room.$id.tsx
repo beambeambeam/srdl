@@ -57,8 +57,8 @@ function AdminRoomDetailPage() {
   const room = roomQuery.data;
 
   return (
-    <main className="flex h-full min-h-0 p-4">
-      <div className="flex flex-wrap items-center gap-2 h-fit">
+    <main className="flex w-full h-full min-h-0 p-4">
+      <div className="flex flex-wrap items-center gap-2 h-fit w-full">
         <h3 className="text-3xl">{room.title}</h3>
         <Badge>{room.code}</Badge>
         <RoomStateController roomId={room._id} roomState={room.state} />

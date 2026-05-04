@@ -1,10 +1,11 @@
 import type { JSX } from "react";
 import { useMutation } from "convex/react";
-import { toast } from "sonner";
 import type { GenericId } from "convex/values";
 import { ChevronLeftIcon, ChevronRightIcon, LockIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { api } from "@srdl/backend/convex/client";
+import { Badge } from "@srdl/ui/components/badge";
 import { Button } from "@srdl/ui/components/button";
 
 const ROOM_STATES = [
@@ -46,10 +47,98 @@ interface RoomStateControllerProps {
   roomState: string;
 }
 
+type SegmentVariant = "current" | "passed" | "upcoming";
+
 const getStateIndex = (state: string): number =>
   ROOM_STATES.indexOf(state as (typeof ROOM_STATES)[number]);
 
 const getRoomStateLabel = (state: string): string => ROOM_STATE_LABELS[state] ?? state;
+
+const getTimelineLabel = (state: string): string => {
+  switch (state) {
+    case "SHOW-1ST-QUESTION": {
+      return "Show 1";
+    }
+    case "GUESS-1ST-QUESTION": {
+      return "Guess 1";
+    }
+    case "ANSWER-1ST-QUESTION": {
+      return "Answer 1";
+    }
+    case "SHOW-2ND-QUESTION": {
+      return "Show 2";
+    }
+    case "GUESS-2ND-QUESTION": {
+      return "Guess 2";
+    }
+    case "ANSWER-2ND-QUESTION": {
+      return "Answer 2";
+    }
+    case "SHOW-3RD-QUESTION": {
+      return "Show 3";
+    }
+    case "GUESS-3RD-QUESTION": {
+      return "Guess 3";
+    }
+    case "ANSWER-3RD-QUESTION": {
+      return "Answer 3";
+    }
+    case "SHOW-4TH-QUESTION": {
+      return "Show 4";
+    }
+    case "GUESS-4TH-QUESTION": {
+      return "Guess 4";
+    }
+    case "ANSWER-4TH-QUESTION": {
+      return "Answer 4";
+    }
+    default: {
+      return getRoomStateLabel(state);
+    }
+  }
+};
+
+const getSegmentVariant = (index: number, currentIndex: number): SegmentVariant => {
+  if (index < currentIndex) {
+    return "passed";
+  }
+
+  if (index === currentIndex) {
+    return "current";
+  }
+
+  return "upcoming";
+};
+
+const getSegmentClassName = (variant: SegmentVariant): string => {
+  // oxlint-disable-next-line default-case
+  switch (variant) {
+    case "passed": {
+      return "bg-secondary";
+    }
+    case "current": {
+      return "bg-accent-foreground";
+    }
+    case "upcoming": {
+      return "bg-muted";
+    }
+  }
+};
+
+const getLabelClassName = (variant: SegmentVariant): string => {
+  // oxlint-disable-next-line default-case
+  switch (variant) {
+    case "passed": {
+      return "text-secondary-foreground";
+    }
+    case "current": {
+      return "font-semibold text-foreground";
+    }
+    case "upcoming": {
+      return "text-muted-foreground";
+    }
+  }
+};
 
 export function RoomStateController({ roomId, roomState }: RoomStateControllerProps): JSX.Element {
   const changeRoomState = useMutation(api.games.rooms.changeStateByDelta);
@@ -72,8 +161,49 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
   };
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-border bg-card text-foreground ring-1 ring-border shadow-sm">
-      <div className="flex items-center gap-2 px-2 py-2">
+    <section className="w-full rounded-lg text-foreground">
+      <div className="overflow-x-auto pb-1 hidden lg:block">
+        <div className="min-w-208">
+          <div className="mb-2 grid h-14 grid-cols-14 items-end gap-1 lg:h-16">
+            {ROOM_STATES.map((state, index) => {
+              const variant = getSegmentVariant(index, safeStateIndex);
+
+              return (
+                <div
+                  key={state}
+                  className="flex h-full items-end justify-center overflow-visible px-0.5"
+                >
+                  <span
+                    aria-current={variant === "current" ? "step" : undefined}
+                    className={`block max-w-14 text-center text-xs leading-none origin-bottom-left -rotate-35 translate-y-0.5 whitespace-nowrap ${getLabelClassName(variant)}`}
+                  >
+                    {getTimelineLabel(state)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="overflow-hidden rounded-md border border-border bg-muted">
+            <div className="grid grid-cols-14">
+              {ROOM_STATES.map((state, index) => {
+                const variant = getSegmentVariant(index, safeStateIndex);
+                const isLast = index === ROOM_STATES.length - 1;
+
+                return (
+                  <div
+                    key={state}
+                    aria-hidden="true"
+                    className={`h-20 ${getSegmentClassName(variant)} ${isLast ? "" : "border-r border-border"}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex w-full items-center justify-center gap-2">
         <Button
           aria-label="Go to previous room state"
           disabled={!canMoveLeft}
@@ -89,8 +219,10 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
             <LockIcon className="size-4 text-muted-foreground" />
           )}
         </Button>
-        <span aria-atomic="true" aria-live="polite" className="text-sm font-medium">
-          {currentStateLabel}
+        <span aria-atomic="true" aria-live="polite" className="text-sm font-medium ">
+          <Badge variant="secondary" className="text-sm text-foreground/90">
+            {currentStateLabel}
+          </Badge>
         </span>
         <Button
           aria-label="Go to next room state"
@@ -108,6 +240,6 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
           )}
         </Button>
       </div>
-    </div>
+    </section>
   );
 }
