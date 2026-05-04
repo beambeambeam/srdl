@@ -12,6 +12,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 
+import { ThemeShell } from "@/components/theme-shell";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
@@ -32,15 +33,17 @@ function RootDocument() {
       authClient={authClient}
       initialToken={context.token}
     >
-      <html lang="en" className="dark">
+      <html lang="en" suppressHydrationWarning>
         <head>
           <HeadContent />
         </head>
         <body>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
-            <Outlet />
-          </div>
-          <Toaster richColors />
+          <ThemeShell>
+            <div className="grid h-svh grid-rows-[auto_1fr]">
+              <Outlet />
+            </div>
+            <Toaster richColors />
+          </ThemeShell>
           <TanStackRouterDevtools position="bottom-left" />
           <Scripts />
         </body>

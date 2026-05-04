@@ -144,3 +144,20 @@
     @apply font-sans;
   }
 }
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0% at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
+  }
+}
+
+::view-transition-new(root) {
+  animation: theme-reveal 500ms ease-in-out;
+}
+
+::view-transition-old(root) {
+  animation: none;
+}
