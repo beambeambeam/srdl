@@ -4,6 +4,10 @@
   "description": "",
   "license": "ISC",
   "author": "",
+  "type": "module",
+  "exports": {
+    "./convex/api": "./convex/api.ts"
+  },
   "scripts": {
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
