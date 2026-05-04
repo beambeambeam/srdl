@@ -86,7 +86,8 @@ export const getWrapUpSummaryByRoom = query({
 
     const summaryRows = [...summaryByPlayer.values()];
 
-    return summaryRows.toSorted((left: WrapUpSummaryRow, right: WrapUpSummaryRow) => {
+    // eslint-disable-next-line unicorn/no-array-sort
+    return summaryRows.sort((left: WrapUpSummaryRow, right: WrapUpSummaryRow) => {
       if (left.correctCount !== right.correctCount) {
         return right.correctCount - left.correctCount;
       }
