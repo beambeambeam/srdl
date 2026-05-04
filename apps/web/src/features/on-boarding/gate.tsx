@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocalStorage } from "@srdl/ui/hooks/use-local-storage";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -20,28 +21,27 @@ export function OnboardingGate({ children }: OnboardingGateProps) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const [hasSeenOnboarding] = useLocalStorage<boolean>(ONBOARDING_STORAGE_KEY, {
+    defaultValue: false,
+  });
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
-      const hasSeenOnboarding = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    setIsReady(true);
+  }, []);
 
-      if (!hasSeenOnboarding && !isPublicPath(pathname)) {
-        await navigate({
-          replace: true,
-          to: ONBOARDING_PATH,
-        });
-        setIsReady(true);
-        return;
-      }
+  useEffect(() => {
+    if (!isReady || hasSeenOnboarding || isPublicPath(pathname)) {
+      return;
+    }
 
-      setIsReady(true);
-    };
+    void navigate({
+      replace: true,
+      to: ONBOARDING_PATH,
+    });
+  }, [hasSeenOnboarding, isReady, navigate, pathname]);
 
-    void checkOnboarding();
-  }, [navigate, pathname]);
-
-  if (!isReady) {
+  if (!isReady || (!hasSeenOnboarding && !isPublicPath(pathname))) {
     return null;
   }
 

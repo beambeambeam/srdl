@@ -22,7 +22,9 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@srdl/ui/components/field";
+import type { LocalStorageOptions } from "@srdl/ui/hooks/use-local-storage";
 import { Input } from "@srdl/ui/components/input";
+import { writeLocalStorageValue } from "@srdl/ui/hooks/use-local-storage";
 import AppLogo from "@/components/logo";
 
 const ONBOARDING_REDIRECT_PATH = "/";
@@ -30,6 +32,9 @@ const ONBOARDING_AGE_STORAGE_KEY = "age";
 const ONBOARDING_ID_STORAGE_KEY = "id";
 const ONBOARDING_NICKNAME_STORAGE_KEY = "nickname";
 const ONBOARDING_STORAGE_KEY = "onboardingSeen";
+const stringLocalStorageOptions: Pick<LocalStorageOptions<string>, "serializer"> = {
+  serializer: (value) => value,
+};
 
 const onboardingSchema = z.object({
   age: z
@@ -61,10 +66,14 @@ export default function Form(): JSX.Element {
       const trimmedNickname = value.nickname.trim();
       const onboardingId = window.crypto.randomUUID();
 
-      window.localStorage.setItem(ONBOARDING_ID_STORAGE_KEY, onboardingId);
-      window.localStorage.setItem(ONBOARDING_NICKNAME_STORAGE_KEY, trimmedNickname);
-      window.localStorage.setItem(ONBOARDING_AGE_STORAGE_KEY, trimmedAge);
-      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
+      writeLocalStorageValue(ONBOARDING_ID_STORAGE_KEY, onboardingId, stringLocalStorageOptions);
+      writeLocalStorageValue(
+        ONBOARDING_NICKNAME_STORAGE_KEY,
+        trimmedNickname,
+        stringLocalStorageOptions,
+      );
+      writeLocalStorageValue(ONBOARDING_AGE_STORAGE_KEY, trimmedAge, stringLocalStorageOptions);
+      writeLocalStorageValue(ONBOARDING_STORAGE_KEY, true);
 
       toast.success("On boarding Success!", {
         description: "Welcome to the apps!",
