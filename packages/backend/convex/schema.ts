@@ -6,6 +6,18 @@ import { ROOM_STATES } from "./roomStates";
 const roomStateValidators = ROOM_STATES.map((state) => v.literal(state));
 
 export default defineSchema({
+  roomPlayerGuesses: defineTable({
+    activePromptSubmissionId: v.id("roomPlayerSubmissions"),
+    createdAt: v.number(),
+    guessedPlayerId: v.string(),
+    guessedPlayerName: v.string(),
+    guesserPlayerId: v.string(),
+    guesserPlayerName: v.string(),
+    questionIndex: v.number(),
+    roomId: v.id("rooms"),
+  })
+    .index("by_room_question", ["roomId", "questionIndex"])
+    .index("by_room_question_guesser", ["roomId", "questionIndex", "guesserPlayerId"]),
   roomPlayerSubmissions: defineTable({
     answers: v.array(v.string()),
     playerId: v.string(),
