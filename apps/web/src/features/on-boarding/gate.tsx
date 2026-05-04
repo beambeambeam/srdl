@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 
 const ONBOARDING_PATH = "/onboarding";
 const ONBOARDING_STORAGE_KEY = "onboardingSeen";
-const PUBLIC_PATHS = new Set(["/onboarding", "/sign-in", "/admin/dashboard"]);
+const PUBLIC_PATHS = new Set(["/", "/onboarding", "/sign-in"]);
+
+const isPublicPath = (pathname: string) =>
+  PUBLIC_PATHS.has(pathname) || pathname.startsWith("/admin");
 
 interface OnboardingGateProps {
   children: ReactNode;
@@ -23,7 +26,7 @@ export function OnboardingGate({ children }: OnboardingGateProps) {
     const checkOnboarding = async () => {
       const hasSeenOnboarding = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
 
-      if (!hasSeenOnboarding && !PUBLIC_PATHS.has(pathname)) {
+      if (!hasSeenOnboarding && !isPublicPath(pathname)) {
         await navigate({
           replace: true,
           to: ONBOARDING_PATH,
