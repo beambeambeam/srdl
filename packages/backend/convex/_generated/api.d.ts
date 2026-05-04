@@ -8,10 +8,13 @@
  * @module
  */
 
+import type * as admin_rooms from "../admin/rooms.js";
+import type * as api_ from "../api.js";
 import type * as auth from "../auth.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as privateData from "../privateData.js";
+import type * as seed from "../seed.js";
 
 import type {
   ApiFromModules,
@@ -20,10 +23,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/rooms": typeof admin_rooms;
+  api: typeof api_;
   auth: typeof auth;
   healthCheck: typeof healthCheck;
   http: typeof http;
   privateData: typeof privateData;
+  seed: typeof seed;
 }>;
 
 /**

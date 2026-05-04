@@ -4,9 +4,14 @@
   "description": "",
   "license": "ISC",
   "author": "",
+  "type": "module",
+  "exports": {
+    "./convex/api": "./convex/api.ts"
+  },
   "scripts": {
     "dev": "convex dev",
-    "dev:setup": "convex dev --configure --until-success"
+    "dev:setup": "convex dev --configure --until-success",
+    "seed": "bun run ./seed.ts"
   },
   "dependencies": {
     "@convex-dev/better-auth": "catalog:",

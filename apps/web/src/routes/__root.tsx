@@ -14,6 +14,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { ThemeShell } from "@/components/theme-shell";
 import { OnboardingGate } from "@/features/on-boarding/gate";
+import { NuqsTanstackRouterAdapter } from "@/lib/nuqs-tanstack-router";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
@@ -41,9 +42,11 @@ function RootDocument() {
         <body>
           <ThemeShell>
             <div className="grid h-svh grid-rows-[auto_1fr]">
-              <OnboardingGate>
-                <Outlet />
-              </OnboardingGate>
+              <NuqsTanstackRouterAdapter>
+                <OnboardingGate>
+                  <Outlet />
+                </OnboardingGate>
+              </NuqsTanstackRouterAdapter>
             </div>
             <Toaster richColors />
           </ThemeShell>
