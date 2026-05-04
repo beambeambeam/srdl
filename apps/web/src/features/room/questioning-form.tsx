@@ -286,7 +286,9 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
   return (
     <>
       <form
-        className="flex min-h-0 w-full max-w-3xl flex-1 overflow-hidden"
+        className={`flex w-full max-w-3xl overflow-hidden ${
+          isSubmitted ? "h-fit min-h-fit flex-none" : "min-h-0 flex-1"
+        }`}
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -294,12 +296,18 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
           void form.handleSubmit();
         }}
       >
-        <Card className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+        <Card
+          className={`flex w-full flex-col overflow-hidden ${
+            isSubmitted ? "h-fit" : "h-full min-h-0"
+          }`}
+        >
           <CardHeader>
             <CardTitle>{isSubmitted ? "Your waiting answers" : "Waiting room questions"}</CardTitle>
             <CardDescription>{cardDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-0 flex-1 overflow-y-auto">
+          <CardContent
+            className={isSubmitted ? "overflow-visible" : "min-h-0 flex-1 overflow-y-auto"}
+          >
             <FieldGroup>
               {QUESTION_FIELDS.map((questionField) => (
                 <form.Field key={questionField.name} name={questionField.name}>
