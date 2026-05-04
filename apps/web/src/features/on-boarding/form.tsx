@@ -26,6 +26,9 @@ import { Input } from "@srdl/ui/components/input";
 import AppLogo from "@/components/logo";
 
 const ONBOARDING_REDIRECT_PATH = "/";
+const ONBOARDING_AGE_STORAGE_KEY = "age";
+const ONBOARDING_ID_STORAGE_KEY = "id";
+const ONBOARDING_NICKNAME_STORAGE_KEY = "nickname";
 const ONBOARDING_STORAGE_KEY = "onboardingSeen";
 
 const onboardingSchema = z.object({
@@ -54,8 +57,19 @@ export default function Form(): JSX.Element {
       nickname: "",
     },
     onSubmit: async ({ value }) => {
+      const trimmedAge = value.age.trim();
+      const trimmedNickname = value.nickname.trim();
+      const onboardingId = window.crypto.randomUUID();
+
+      window.localStorage.setItem(ONBOARDING_ID_STORAGE_KEY, onboardingId);
+      window.localStorage.setItem(ONBOARDING_NICKNAME_STORAGE_KEY, trimmedNickname);
+      window.localStorage.setItem(ONBOARDING_AGE_STORAGE_KEY, trimmedAge);
       window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
-      toast.success(`Welcome, ${value.nickname.trim()}`);
+
+      toast.success("On boarding Success!", {
+        description: "Welcome to the apps!",
+      });
+
       await navigate({
         replace: true,
         to: ONBOARDING_REDIRECT_PATH,
@@ -67,27 +81,27 @@ export default function Form(): JSX.Element {
   });
 
   return (
-    <div className="mx-auto flex min-h-svh w-full items-center justify-center">
-      <Card className="w-full max-w-md">
-        <div className="w-full flex items-center justify-center">
-          <AppLogo className="pt-4 size-60" />
-        </div>
-        <CardHeader>
-          <CardTitle>Welcome to our apps!</CardTitle>
-          <CardDescription>
-            Add a nickname and your age so we can finish your onboarding.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="flex flex-col gap-6"
-            noValidate
-            onSubmit={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void form.handleSubmit();
-            }}
-          >
+    <div className="mx-auto flex min-h-svh w-full items-center justify-center px-4 py-8 sm:px-6">
+      <form
+        className="w-full max-w-xl"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <Card className="mx-auto w-full max-w-xl">
+          <div className="flex w-full items-center justify-center">
+            <AppLogo className="size-60 pt-4 sm:size-72" />
+          </div>
+          <CardHeader>
+            <CardTitle>Welcome to our apps!</CardTitle>
+            <CardDescription>
+              Add a nickname and your age so we can finish your onboarding.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <FieldGroup>
               <form.Field name="nickname">
                 {(field) => {
@@ -140,23 +154,23 @@ export default function Form(): JSX.Element {
                 }}
               </form.Field>
             </FieldGroup>
-          </form>
-        </CardContent>
-        <CardFooter className="bg-transparent border-t-0">
-          <form.Subscribe
-            selector={(state) => ({
-              canSubmit: state.canSubmit,
-              isSubmitting: state.isSubmitting,
-            })}
-          >
-            {({ canSubmit, isSubmitting }) => (
-              <Button className="w-full" disabled={!canSubmit || isSubmitting} type="submit">
-                {isSubmitting ? "Saving..." : "Continue"}
-              </Button>
-            )}
-          </form.Subscribe>
-        </CardFooter>
-      </Card>
+          </CardContent>
+          <CardFooter className="border-t-0 bg-transparent pt-2">
+            <form.Subscribe
+              selector={(state) => ({
+                canSubmit: state.canSubmit,
+                isSubmitting: state.isSubmitting,
+              })}
+            >
+              {({ canSubmit, isSubmitting }) => (
+                <Button className="w-full" disabled={!canSubmit || isSubmitting} type="submit">
+                  {isSubmitting ? "Saving..." : "Continue"}
+                </Button>
+              )}
+            </form.Subscribe>
+          </CardFooter>
+        </Card>
+      </form>
     </div>
   );
 }
