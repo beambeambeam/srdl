@@ -2,7 +2,8 @@ import { v } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
-import { ROOM_STATES, DEFAULT_ROOM_STATE, type RoomState } from "../roomStates";
+import { ROOM_STATES, DEFAULT_ROOM_STATE } from '../roomStates';
+import type { RoomState } from '../roomStates';
 
 const DEFAULT_SORT = {
   desc: true,
@@ -209,18 +210,19 @@ export const getTablePage = query({
     const titleFilter = getNormalizedTitleFilter(args.filters.title);
     const roomDocuments = await ctx.db.query("rooms").take(MAX_TABLE_SCAN);
     const stateFilter = getNormalizedStateFilter(args.filters.state);
-    const stateFilterValues = typeof stateFilter === "string" ? [stateFilter] : stateFilter;
+    const stateFilterValues = typeof stateFilter === "string"
+      ? [stateFilter]
+      : stateFilter;
     const filteredRoomDocuments = titleFilter
       ? roomDocuments.filter((room: RoomDocument) =>
           getSortableRoomTitle(room.title).startsWith(titleFilter),
         )
       : roomDocuments;
-    const stateFilteredRoomDocuments =
-      stateFilterValues !== null
-        ? filteredRoomDocuments.filter((room: RoomDocument) =>
-            stateFilterValues.includes(room.state.toLowerCase()),
-          )
-        : filteredRoomDocuments;
+    const stateFilteredRoomDocuments = stateFilterValues !== null
+      ? filteredRoomDocuments.filter((room: RoomDocument) =>
+          stateFilterValues.includes(room.state.toLowerCase()),
+        )
+      : filteredRoomDocuments;
     const sortedRoomDocuments =
       titleFilter || primarySort.id === "title"
         ? sortFilteredRoomDocuments(stateFilteredRoomDocuments, primarySort)
@@ -267,8 +269,8 @@ export const getByCode = query({
 
 export const changeStateByDelta = mutation({
   args: {
-    id: v.id("rooms"),
     direction: v.union(v.literal("left"), v.literal("right")),
+    id: v.id("rooms"),
   },
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.id);
