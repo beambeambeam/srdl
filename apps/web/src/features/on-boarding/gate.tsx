@@ -1,13 +1,14 @@
 "use client";
 
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 const ONBOARDING_PATH = "/onboarding";
 const ONBOARDING_STORAGE_KEY = "onboardingSeen";
 
 interface OnboardingGateProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function OnboardingGate({ children }: OnboardingGateProps) {

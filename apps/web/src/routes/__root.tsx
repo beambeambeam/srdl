@@ -13,7 +13,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 
 import { ThemeShell } from "@/components/theme-shell";
-import { OnboardingGate } from "@/components/onboarding-gate";
+import { OnboardingGate } from "@/features/on-boarding/gate";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
