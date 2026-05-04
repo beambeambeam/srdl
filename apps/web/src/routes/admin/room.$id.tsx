@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@srdl/ui/components/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@srdl/ui/components/tabs";
 import { getRoomStateLabel } from "@/shared/games";
 
 function AdminRoomDetailPage() {
@@ -81,9 +82,55 @@ function AdminRoomDetailPage() {
             <RoomStateController roomId={room._id} roomState={room.state} />
           </CardContent>
         </Card>
-        <div className="grid grid-cols-[2fr_1fr] gap-4 w-full">
+        <div className="grid w-full gap-4 lg:grid-cols-[2fr_1fr]">
           <Card className="h-fit w-full">
-            <CardContent>Tab1</CardContent>
+            <CardHeader>
+              <CardTitle>Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="waiting" className="flex w-full flex-col gap-2">
+                <div className="w-full overflow-x-auto pb-1">
+                  <TabsList className="h-auto w-max min-w-full justify-start gap-2">
+                    <TabsTrigger value="waiting" className="shrink-0">
+                      Waiting
+                    </TabsTrigger>
+                    <TabsTrigger value="question-1" className="shrink-0">
+                      Question 1
+                    </TabsTrigger>
+                    <TabsTrigger value="question-2" className="shrink-0">
+                      Question 2
+                    </TabsTrigger>
+                    <TabsTrigger value="question-3" className="shrink-0">
+                      Question 3
+                    </TabsTrigger>
+                    <TabsTrigger value="question-4" className="shrink-0">
+                      Question 4
+                    </TabsTrigger>
+                    <TabsTrigger value="wrap-up" className="shrink-0">
+                      Wrap up
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="waiting" className="pt-2">
+                  Waiting
+                </TabsContent>
+                <TabsContent value="question-1" className="pt-2">
+                  Question 1
+                </TabsContent>
+                <TabsContent value="question-2" className="pt-2">
+                  Question 2
+                </TabsContent>
+                <TabsContent value="question-3" className="pt-2">
+                  Question 3
+                </TabsContent>
+                <TabsContent value="question-4" className="pt-2">
+                  Question 4
+                </TabsContent>
+                <TabsContent value="wrap-up" className="pt-2">
+                  Wrap up
+                </TabsContent>
+              </Tabs>
+            </CardContent>
           </Card>
           <Card className="h-fit w-full">
             <CardContent>Tab2</CardContent>
