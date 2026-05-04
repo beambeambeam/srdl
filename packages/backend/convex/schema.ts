@@ -16,6 +16,7 @@ export default defineSchema({
     questionIndex: v.number(),
     roomId: v.id("rooms"),
   })
+    .index("by_room", ["roomId"])
     .index("by_room_question", ["roomId", "questionIndex"])
     .index("by_room_question_guesser", ["roomId", "questionIndex", "guesserPlayerId"]),
   roomPlayerSubmissions: defineTable({

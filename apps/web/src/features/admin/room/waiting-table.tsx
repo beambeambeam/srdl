@@ -76,21 +76,19 @@ export function WaitingTable({ roomId }: WaitingTableProps): JSX.Element {
       },
       {
         cell: ({ row }) => (
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSelectedSubmission(row.original);
-                setIsDialogOpen(true);
-              }}
-            >
-              View Answers
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setSelectedSubmission(row.original);
+              setIsDialogOpen(true);
+            }}
+          >
+            View Answers
+          </Button>
         ),
         enableSorting: false,
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div>Actions</div>,
         id: "actions",
       },
     ],

@@ -1,9 +1,18 @@
 import { v } from "convex/values";
 
+import type { Doc, Id } from "../_generated/dataModel";
 import { query, mutation } from "../_generated/server";
 import { getQuestionIndexFromRoomState, isGuessState } from "./roomStatePrompts";
 
 const getTrimmedValue = (value: string): string => value.trim();
+
+interface WrapUpSummaryRow {
+  correctCount: number;
+  playerId: string;
+  playerName: string;
+  totalGuesses: number;
+  wrongCount: number;
+}
 
 export const getForRoomQuestionAndPlayer = query({
   args: {
@@ -21,6 +30,72 @@ export const getForRoomQuestionAndPlayer = query({
           .eq("guesserPlayerId", args.guesserPlayerId),
       )
       .unique(),
+});
+
+export const getWrapUpSummaryByRoom = query({
+  args: {
+    roomId: v.id("rooms"),
+  },
+  handler: async (ctx, args): Promise<WrapUpSummaryRow[]> => {
+    const guesses = await ctx.db
+      .query("roomPlayerGuesses")
+      .withIndex("by_room", (queryBuilder) => queryBuilder.eq("roomId", args.roomId))
+      .collect();
+
+    if (guesses.length === 0) {
+      return [];
+    }
+
+    const submissionCache = new Map<
+      Id<"roomPlayerSubmissions">,
+      Doc<"roomPlayerSubmissions"> | null
+    >();
+    const summaryByPlayer = new Map<string, WrapUpSummaryRow>();
+
+    for (const guess of guesses) {
+      let activePromptSubmission = submissionCache.get(guess.activePromptSubmissionId);
+
+      if (activePromptSubmission === undefined) {
+        activePromptSubmission = await ctx.db.get(guess.activePromptSubmissionId);
+        submissionCache.set(guess.activePromptSubmissionId, activePromptSubmission);
+      }
+
+      if (activePromptSubmission === null) {
+        continue;
+      }
+
+      const existingSummary = summaryByPlayer.get(guess.guesserPlayerId) ?? {
+        correctCount: 0,
+        playerId: guess.guesserPlayerId,
+        playerName: guess.guesserPlayerName,
+        totalGuesses: 0,
+        wrongCount: 0,
+      };
+      const isCorrect = guess.guessedPlayerId === activePromptSubmission.playerId;
+
+      existingSummary.totalGuesses += 1;
+
+      if (isCorrect) {
+        existingSummary.correctCount += 1;
+      } else {
+        existingSummary.wrongCount += 1;
+      }
+
+      summaryByPlayer.set(guess.guesserPlayerId, existingSummary);
+    }
+
+    return [...summaryByPlayer.values()].toSorted((left, right) => {
+      if (left.correctCount !== right.correctCount) {
+        return right.correctCount - left.correctCount;
+      }
+
+      if (left.wrongCount !== right.wrongCount) {
+        return left.wrongCount - right.wrongCount;
+      }
+
+      return left.playerName.localeCompare(right.playerName);
+    });
+  },
 });
 
 export const create = mutation({

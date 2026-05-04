@@ -7,8 +7,10 @@ import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react
 import { useQuery } from "@tanstack/react-query";
 
 import { RoomStateController } from "../../features/admin/room/state-controller";
+import { QuestionAnswerTable } from "../../features/admin/room/question-answer-table";
 import { Timer } from "../../features/admin/room/timer";
 import { WaitingTable } from "../../features/admin/room/waiting-table";
+import { WrapUpTable } from "../../features/admin/room/wrap-up-table";
 import {
   Card,
   CardContent,
@@ -117,19 +119,35 @@ function AdminRoomDetailPage() {
                   <WaitingTable roomId={room._id} />
                 </TabsContent>
                 <TabsContent value="question-1" className="pt-2">
-                  Question 1
+                  <QuestionAnswerTable
+                    questionIndex={0}
+                    questionLabel="Question 1"
+                    roomId={room._id}
+                  />
                 </TabsContent>
                 <TabsContent value="question-2" className="pt-2">
-                  Question 2
+                  <QuestionAnswerTable
+                    questionIndex={1}
+                    questionLabel="Question 2"
+                    roomId={room._id}
+                  />
                 </TabsContent>
                 <TabsContent value="question-3" className="pt-2">
-                  Question 3
+                  <QuestionAnswerTable
+                    questionIndex={2}
+                    questionLabel="Question 3"
+                    roomId={room._id}
+                  />
                 </TabsContent>
                 <TabsContent value="question-4" className="pt-2">
-                  Question 4
+                  <QuestionAnswerTable
+                    questionIndex={3}
+                    questionLabel="Question 4"
+                    roomId={room._id}
+                  />
                 </TabsContent>
                 <TabsContent value="wrap-up" className="pt-2">
-                  Wrap up
+                  <WrapUpTable roomId={room._id} />
                 </TabsContent>
               </Tabs>
             </CardContent>
