@@ -16,6 +16,8 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { useEffect } from "react";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
 
+import { RoomStatePanel } from "@/features/room/state-panel";
+
 const ROOM_CODE_PATTERN = /^\d{6}$/;
 
 function RouteComponent() {
@@ -132,7 +134,9 @@ function RouteComponent() {
           {roomQuery.data.code}
         </Badge>
       </div>
-      <div className="relative flex h-full w-full flex-1 flex-col rounded-xl bg-background shadow-sm"></div>
+      <div className="relative flex h-full w-full flex-1 flex-col items-center rounded-xl bg-background p-4 shadow-sm">
+        <RoomStatePanel roomId={roomQuery.data._id} roomState={roomQuery.data.state} />
+      </div>
     </main>
   );
 }
