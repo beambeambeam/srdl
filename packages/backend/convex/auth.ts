@@ -18,11 +18,11 @@ const getSiteUrl = (): string => {
   return siteUrl;
 };
 
-const siteUrl = getSiteUrl();
-
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 function createAuth(ctx: GenericCtx<DataModel>) {
+  const siteUrl = getSiteUrl();
+
   return betterAuth({
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
