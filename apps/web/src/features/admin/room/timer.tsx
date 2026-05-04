@@ -21,6 +21,12 @@ type TimerPreset = (typeof TIMER_PRESETS)[number];
 
 const DEFAULT_TIMER_PRESET_MS = TIMER_PRESETS[0].valueMs;
 
+const getPresetDurationMs = (value: string): TimerPreset["valueMs"] | undefined => {
+  const durationMs = Number(value);
+
+  return TIMER_PRESETS.find((preset) => preset.valueMs === durationMs)?.valueMs;
+};
+
 const formatRemainingTime = (remainingMs: number): string => {
   const totalTenths = Math.max(0, Math.floor(remainingMs / 100));
   const totalSeconds = Math.floor(totalTenths / 10);
@@ -70,7 +76,11 @@ export function Timer(): JSX.Element {
   }, [isTimerRunning]);
 
   const handleDurationChange = (durationValue: string): void => {
-    const nextDurationMs = Number.parseInt(durationValue, 10) as TimerPreset["valueMs"];
+    const nextDurationMs = getPresetDurationMs(durationValue);
+
+    if (!nextDurationMs) {
+      return;
+    }
 
     setSelectedDurationMs(nextDurationMs);
     setRemainingMs(nextDurationMs);
@@ -83,8 +93,10 @@ export function Timer(): JSX.Element {
   };
 
   const handleTimerStart = (): void => {
-    timerEndTimeRef.current = Date.now() + selectedDurationMs;
-    setRemainingMs(selectedDurationMs);
+    const durationMs = remainingMs > 0 ? remainingMs : selectedDurationMs;
+
+    timerEndTimeRef.current = Date.now() + durationMs;
+    setRemainingMs(durationMs);
     setIsTimerRunning(true);
   };
 
