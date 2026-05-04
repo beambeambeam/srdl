@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@srdl/backend/convex/client";
 import type { GenericId } from "convex/values";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@srdl/ui/components/badge";
 
@@ -10,6 +10,13 @@ function AdminRoomDetailPage() {
   const { id } = useParams({
     from: "/admin/room/$id",
   });
+  const pathname = useLocation({
+    select: (state) => state.pathname,
+  });
+
+  if (pathname.endsWith("/projector")) {
+    return <Outlet />;
+  }
 
   const roomQuery = useQuery(
     convexQuery(api.games.rooms.getById, {
