@@ -10,6 +10,7 @@ import {
 import { Monitor, Presentation, Text } from "lucide-react";
 import { api } from "@srdl/backend/convex/client";
 import { DataTableSkeleton } from "@srdl/ui/components/data-table/skeleton";
+import { RelativeTimeCard } from "@srdl/ui/components/relative-time-card";
 import { Badge } from "@srdl/ui/components/badge";
 import type { ColumnDef } from "@tanstack/react-table";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -132,7 +133,13 @@ export function AdminRoomTable() {
           const createdAt = row.getValue("createdAt");
           const value = typeof createdAt === "string" || createdAt instanceof Date ? createdAt : "";
 
-          return <div className="text-muted-foreground text-sm">{value.toLocaleString()}</div>;
+          return (
+            <RelativeTimeCard
+              className="text-muted-foreground text-sm"
+              date={value}
+              variant="muted"
+            />
+          );
         },
         header: ({ column }) => <DataTableColumnHeader column={column} label="Created At" />,
         id: "createdAt",

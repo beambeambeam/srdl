@@ -3,6 +3,7 @@ import { api } from "@srdl/backend/convex/client";
 import { DataTable } from "@srdl/ui/components/data-table";
 import { DataTableSkeleton } from "@srdl/ui/components/data-table/skeleton";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
+import { RelativeTimeCard } from "@srdl/ui/components/relative-time-card";
 import type { ColumnDef } from "@tanstack/react-table";
 import { getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
@@ -68,9 +69,11 @@ export function QuestionAnswerTable({
       {
         accessorKey: "submittedAt",
         cell: ({ row }) => (
-          <div className="text-muted-foreground text-sm">
-            {new Date(row.original.submittedAt).toLocaleString()}
-          </div>
+          <RelativeTimeCard
+            className="text-muted-foreground text-sm"
+            date={row.original.submittedAt}
+            variant="muted"
+          />
         ),
         enableSorting: false,
         header: () => "Submitted At",
