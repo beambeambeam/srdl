@@ -30,6 +30,15 @@ interface RoomSort {
 type RoomDocument = Doc<"rooms">;
 type RoomPlayerSubmissionDocument = Doc<"roomPlayerSubmissions">;
 
+interface PromptSelection {
+  answer: string;
+  playerId: string;
+  playerName: string;
+  questionIndex: number;
+  selectedAt: number;
+  submissionId: RoomPlayerSubmissionDocument["_id"];
+}
+
 const getCurrentRoomStateIndex = (state: string): number => ROOM_STATES.indexOf(state as RoomState);
 
 const getNormalizedPage = (page: number): number => Math.max(1, Math.floor(page));
@@ -74,27 +83,10 @@ const getProjectorPhase = (
   return "unknown";
 };
 
-const shouldPreserveActivePrompt = (
-  room: RoomDocument,
-  nextState: RoomState,
-  nextQuestionIndex: number | null,
-): boolean => {
-  if (room.activePrompt === undefined || nextQuestionIndex === null) {
-    return false;
-  }
-
-  return (
-    isPromptDrivenState(nextState) &&
-    room.activePrompt.questionIndex === nextQuestionIndex &&
-    getQuestionIndexFromRoomState(room.activePrompt.roomState) === nextQuestionIndex
-  );
-};
-
-const buildActivePrompt = (
+const buildPromptSelection = (
   submission: RoomPlayerSubmissionDocument,
-  nextState: RoomState,
-  questionIndex: 0 | 1 | 2 | 3,
-) => {
+  questionIndex: number,
+): PromptSelection => {
   const answer = submission.answers[questionIndex];
 
   if (answer === undefined || answer.trim() === "") {
@@ -106,11 +98,64 @@ const buildActivePrompt = (
     playerId: submission.playerId,
     playerName: submission.playerName,
     questionIndex,
-    roomState: nextState,
     selectedAt: Date.now(),
     submissionId: submission._id,
   };
 };
+
+const buildActivePromptFromSelection = (selection: PromptSelection, roomState: RoomState) => ({
+  ...selection,
+  roomState,
+});
+
+const getPromptSelectionByQuestionIndex = (
+  promptSelections: PromptSelection[] | undefined,
+  questionIndex: number,
+): PromptSelection | null =>
+  promptSelections?.find(
+    (promptSelection: PromptSelection) => promptSelection.questionIndex === questionIndex,
+  ) ?? null;
+
+const setPromptSelectionForQuestionIndex = (
+  promptSelections: PromptSelection[] | undefined,
+  selection: PromptSelection,
+): PromptSelection[] => {
+  const nextPromptSelections = (promptSelections ?? []).filter(
+    (promptSelection: PromptSelection) => promptSelection.questionIndex !== selection.questionIndex,
+  );
+
+  nextPromptSelections.push(selection);
+  nextPromptSelections.sort(
+    (left: PromptSelection, right: PromptSelection) => left.questionIndex - right.questionIndex,
+  );
+
+  return nextPromptSelections;
+};
+
+const getLegacyPromptSelection = (
+  room: RoomDocument,
+  questionIndex: number,
+): PromptSelection | null => {
+  if (room.activePrompt === undefined || room.activePrompt.questionIndex !== questionIndex) {
+    return null;
+  }
+
+  return {
+    answer: room.activePrompt.answer,
+    playerId: room.activePrompt.playerId,
+    playerName: room.activePrompt.playerName,
+    questionIndex: room.activePrompt.questionIndex,
+    selectedAt: room.activePrompt.selectedAt,
+    submissionId: room.activePrompt.submissionId,
+  };
+};
+
+const getPersistedPromptSelection = (
+  room: RoomDocument,
+  questionIndex: number,
+): PromptSelection | null =>
+  getPromptSelectionByQuestionIndex(room.promptSelections, questionIndex) ??
+  getLegacyPromptSelection(room, questionIndex);
 
 const getNormalizedTitleFilter = (title: string | null | undefined): string | null => {
   if (!title) {
@@ -356,8 +401,19 @@ export const getProjectorState = query({
     const questionIndex = getQuestionIndexFromRoomState(room.state);
     const phase = getProjectorPhase(room.state);
     const isPromptState = isPromptDrivenState(room.state);
-    const activePrompt =
-      isPromptState && room.activePrompt !== undefined ? room.activePrompt : null;
+    const persistedSelection =
+      isPromptState && questionIndex !== null
+        ? getPersistedPromptSelection(room, questionIndex)
+        : null;
+    let activePrompt = null;
+
+    if (isPromptState) {
+      if (room.activePrompt !== undefined) {
+        ({ activePrompt } = room);
+      } else if (persistedSelection !== null) {
+        activePrompt = buildActivePromptFromSelection(persistedSelection, room.state);
+      }
+    }
 
     return {
       activePrompt,
@@ -408,25 +464,38 @@ export const changeStateByDelta = mutation({
       return nextState;
     }
 
-    if (shouldPreserveActivePrompt(room, nextState, nextQuestionIndex)) {
-      const { activePrompt } = room;
-
-      if (activePrompt === undefined) {
-        throw new Error("Missing active prompt for prompt-driven state transition.");
+    if (isPromptDrivenState(nextState)) {
+      if (nextQuestionIndex === null) {
+        throw new Error(`Unable to determine question index for state ${nextState}.`);
       }
 
-      await ctx.db.patch(args.id, {
-        activePrompt: {
-          ...activePrompt,
-          roomState: nextState,
-        },
-        state: nextState,
-      });
+      const persistedSelection = getPersistedPromptSelection(room, nextQuestionIndex);
 
-      return nextState;
+      if (persistedSelection !== null) {
+        const currentSelection = getPromptSelectionByQuestionIndex(
+          room.promptSelections,
+          nextQuestionIndex,
+        );
+        const promptSelections =
+          currentSelection === null
+            ? setPromptSelectionForQuestionIndex(room.promptSelections, persistedSelection)
+            : room.promptSelections;
+
+        await ctx.db.patch(args.id, {
+          activePrompt: buildActivePromptFromSelection(persistedSelection, nextState),
+          promptSelections,
+          state: nextState,
+        });
+
+        return nextState;
+      }
     }
 
     if (isShowState(nextState)) {
+      if (nextQuestionIndex === null) {
+        throw new Error(`Unable to determine question index for state ${nextState}.`);
+      }
+
       const submissions = await ctx.db
         .query("roomPlayerSubmissions")
         .withIndex("by_room", (queryBuilder) => queryBuilder.eq("roomId", args.id))
@@ -436,18 +505,23 @@ export const changeStateByDelta = mutation({
         throw new Error("Cannot enter show state without player submissions.");
       }
 
-      if (nextQuestionIndex === null) {
-        throw new Error(`Unable to determine question index for state ${nextState}.`);
-      }
-
       const selectedSubmission = getRandomSubmission(submissions);
+      const promptSelection = buildPromptSelection(selectedSubmission, nextQuestionIndex);
 
       await ctx.db.patch(args.id, {
-        activePrompt: buildActivePrompt(selectedSubmission, nextState, nextQuestionIndex),
+        activePrompt: buildActivePromptFromSelection(promptSelection, nextState),
+        promptSelections: setPromptSelectionForQuestionIndex(
+          room.promptSelections,
+          promptSelection,
+        ),
         state: nextState,
       });
 
       return nextState;
+    }
+
+    if (isPromptDrivenState(nextState)) {
+      throw new Error("Missing persisted prompt selection for prompt-driven state transition.");
     }
 
     return await ctx.db.patch(args.id, {

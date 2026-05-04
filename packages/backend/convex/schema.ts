@@ -40,6 +40,18 @@ export default defineSchema({
       }),
     ),
     code: v.string(),
+    promptSelections: v.optional(
+      v.array(
+        v.object({
+          answer: v.string(),
+          playerId: v.string(),
+          playerName: v.string(),
+          questionIndex: v.number(),
+          selectedAt: v.number(),
+          submissionId: v.id("roomPlayerSubmissions"),
+        }),
+      ),
+    ),
     state: v.union(...roomStateValidators),
     title: v.string(),
   }).index("by_code", ["code"]),
