@@ -3,6 +3,7 @@ import { api } from "@srdl/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@srdl/ui/components/card";
+import AppLogo from "@/components/logo";
 
 function HomeComponent() {
   const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
@@ -18,7 +19,8 @@ function HomeComponent() {
   }
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center flex-col gap-2">
+      <AppLogo className="size-100" />
       <Card className="w-fit min-w-2xl">
         <CardHeader>
           <CardTitle>API Status</CardTitle>
