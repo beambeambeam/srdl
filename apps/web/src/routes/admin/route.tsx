@@ -7,7 +7,7 @@ function AdminLayout() {
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset className="min-h-0 overflow-hidden">
-        <div className="flex shrink-0 items-start p-1">
+        <div className="flex shrink-0 items-start p-4">
           <SidebarTrigger />
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">

@@ -11,10 +11,10 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 import { ThemeShell } from "@/components/theme-shell";
 import { OnboardingGate } from "@/features/on-boarding/gate";
+import { NuqsTanstackRouterAdapter } from "@/lib/nuqs-tanstack-router";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
@@ -42,11 +42,11 @@ function RootDocument() {
         <body>
           <ThemeShell>
             <div className="grid h-svh grid-rows-[auto_1fr]">
-              <NuqsAdapter>
+              <NuqsTanstackRouterAdapter>
                 <OnboardingGate>
                   <Outlet />
                 </OnboardingGate>
-              </NuqsAdapter>
+              </NuqsTanstackRouterAdapter>
             </div>
             <Toaster richColors />
           </ThemeShell>

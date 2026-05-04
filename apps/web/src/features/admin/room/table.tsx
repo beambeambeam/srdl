@@ -1,11 +1,11 @@
 import { Text } from "lucide-react";
-import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@srdl/ui/components/data-table";
 import { DataTableColumnHeader } from "@srdl/ui/components/data-table/column-header";
 import { DataTableToolbar } from "@srdl/ui/components/data-table/toolbar";
 import { useDataTable } from "@srdl/ui/hooks/use-data-table";
+import { useMemo } from "react";
 
 interface RoomRow {
   id: string;
@@ -36,7 +36,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 export function AdminRoomTable() {
-  const columns = React.useMemo<ColumnDef<RoomRow>[]>(
+  const columns = useMemo<ColumnDef<RoomRow>[]>(
     () => [
       {
         accessorKey: "title",
