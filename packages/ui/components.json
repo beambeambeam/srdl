@@ -1,24 +1,26 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-lyra",
+  "style": "base-nova",
   "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
     "css": "src/styles/globals.css",
-    "baseColor": "neutral",
+    "baseColor": "olive",
     "cssVariables": true,
     "prefix": ""
   },
   "iconLibrary": "lucide",
+  "menuColor": "default-translucent",
+  "menuAccent": "subtle",
   "aliases": {
     "components": "@srdl/ui/components",
     "utils": "@srdl/ui/lib/utils",
-    "hooks": "@srdl/ui/hooks",
+    "ui": "@srdl/ui/components",
     "lib": "@srdl/ui/lib",
-    "ui": "@srdl/ui/components"
+    "hooks": "@srdl/ui/hooks"
   },
-  "menuColor": "default",
-  "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+  }
 }

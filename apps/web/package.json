@@ -10,6 +10,8 @@
   "dependencies": {
     "@convex-dev/better-auth": "catalog:",
     "@convex-dev/react-query": "^0.1.0",
+    "@fontsource/geist-sans": "^5.2.5",
+    "@fontsource/merriweather": "^5.2.11",
     "@srdl/backend": "workspace:*",
     "@srdl/env": "workspace:*",
     "@srdl/ui": "workspace:*",
