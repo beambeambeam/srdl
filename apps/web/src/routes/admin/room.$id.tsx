@@ -1,10 +1,11 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@srdl/backend/convex/client";
 import type { GenericId } from "convex/values";
+import { Badge } from "@srdl/ui/components/badge";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
 import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@srdl/ui/components/badge";
+import { RoomStateController } from "../../features/admin/room/state-controller";
 
 function AdminRoomDetailPage() {
   const { id } = useParams({
@@ -13,16 +14,15 @@ function AdminRoomDetailPage() {
   const pathname = useLocation({
     select: (state) => state.pathname,
   });
-
-  if (pathname.endsWith("/projector")) {
-    return <Outlet />;
-  }
-
   const roomQuery = useQuery(
     convexQuery(api.games.rooms.getById, {
       id: id as GenericId<"rooms">,
     }),
   );
+
+  if (pathname.endsWith("/projector")) {
+    return <Outlet />;
+  }
 
   if (roomQuery.isPending && !roomQuery.data) {
     return (
@@ -53,11 +53,14 @@ function AdminRoomDetailPage() {
     );
   }
 
+  const room = roomQuery.data;
+
   return (
     <main className="flex h-full min-h-0 p-4">
-      <div className="flex gap-2 items-center h-fit">
-        <h3 className="text-3xl">{roomQuery.data.title}</h3>
-        <Badge>{roomQuery.data.code}</Badge>
+      <div className="flex flex-wrap items-center gap-2 h-fit">
+        <h3 className="text-3xl">{room.title}</h3>
+        <Badge>{room.code}</Badge>
+        <RoomStateController roomId={room._id} roomState={room.state} />
       </div>
     </main>
   );

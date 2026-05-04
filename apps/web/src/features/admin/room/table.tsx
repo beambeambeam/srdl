@@ -10,6 +10,7 @@ import {
 import { Monitor, Presentation, Text } from "lucide-react";
 import { api } from "@srdl/backend/convex/client";
 import { DataTableSkeleton } from "@srdl/ui/components/data-table/skeleton";
+import { Badge } from "@srdl/ui/components/badge";
 import type { ColumnDef } from "@tanstack/react-table";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
@@ -30,9 +31,29 @@ const generatePreviewRoomCode = (): string =>
 interface RoomRow {
   code: string;
   id: string;
+  state: string;
   title: string;
   createdAt: string;
 }
+
+const ROOM_STATE_LABELS: Record<string, string> = {
+  "ANSWER-1ST-QUESTION": "Answer Question 1",
+  "ANSWER-2ND-QUESTION": "Answer Question 2",
+  "ANSWER-3RD-QUESTION": "Answer Question 3",
+  "ANSWER-4TH-QUESTION": "Answer Question 4",
+  "GUESS-1ST-QUESTION": "Guess Question 1",
+  "GUESS-2ND-QUESTION": "Guess Question 2",
+  "GUESS-3RD-QUESTION": "Guess Question 3",
+  "GUESS-4TH-QUESTION": "Guess Question 4",
+  "SHOW-1ST-QUESTION": "Show Question 1",
+  "SHOW-2ND-QUESTION": "Show Question 2",
+  "SHOW-3RD-QUESTION": "Show Question 3",
+  "SHOW-4TH-QUESTION": "Show Question 4",
+  WAITING: "Waiting",
+  "WRAP UP": "Wrap Up",
+};
+
+const getRoomStateLabel = (state: string): string => ROOM_STATE_LABELS[state] ?? state;
 
 const getTitleFilter = (value: string | string[] | null | undefined): string | null => {
   if (typeof value !== "string") {
@@ -42,6 +63,24 @@ const getTitleFilter = (value: string | string[] | null | undefined): string | n
   const title = value.trim();
 
   return title === "" ? null : title;
+};
+
+const getStateFilter = (value: string | string[] | null | undefined): string | string[] | null => {
+  if (typeof value === "string") {
+    const filterValue = value.trim().toLowerCase();
+
+    return filterValue === "" ? null : filterValue;
+  }
+
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const normalizedValues = value
+    .map((item) => (typeof item === "string" ? item.trim().toLowerCase() : ""))
+    .filter((item) => item !== "");
+
+  return normalizedValues.length > 0 ? normalizedValues : null;
 };
 
 export function AdminRoomTable() {
@@ -80,6 +119,29 @@ export function AdminRoomTable() {
         id: "code",
         meta: {
           label: "Code",
+        },
+      },
+      {
+        accessorKey: "state",
+        cell: ({ row }) => {
+          const state = row.getValue("state");
+          const normalizedState = typeof state === "string" ? state : "";
+
+          return <Badge variant="secondary">{getRoomStateLabel(normalizedState)}</Badge>;
+        },
+        enableColumnFilter: true,
+        enableSorting: true,
+        header: () => "State",
+        id: "state",
+        meta: {
+          icon: Text,
+          label: "State",
+          options: Object.keys(ROOM_STATE_LABELS).map((stateValue) => ({
+            label: getRoomStateLabel(stateValue),
+            value: stateValue,
+          })),
+          placeholder: "Filter states...",
+          variant: "select",
         },
       },
       {
@@ -142,6 +204,7 @@ export function AdminRoomTable() {
   const roomTableArgs = useMemo(
     () => ({
       filters: {
+        state: getStateFilter(queryState.filterValues.state),
         title: getTitleFilter(queryState.filterValues.title),
       },
       page: queryState.page,
@@ -154,7 +217,13 @@ export function AdminRoomTable() {
             }))
           : [],
     }),
-    [queryState.filterValues.title, queryState.page, queryState.perPage, queryState.sorting],
+    [
+      queryState.filterValues.title,
+      queryState.filterValues.state,
+      queryState.page,
+      queryState.perPage,
+      queryState.sorting,
+    ],
   );
 
   const roomPage = useQuery({

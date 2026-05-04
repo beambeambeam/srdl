@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
+import { ROOM_STATES, DEFAULT_ROOM_STATE, type RoomState } from "../roomStates";
 
 const DEFAULT_SORT = {
   desc: true,
@@ -19,6 +20,8 @@ interface RoomSort {
 }
 
 type RoomDocument = Doc<"rooms">;
+
+const getCurrentRoomStateIndex = (state: string): number => ROOM_STATES.indexOf(state as RoomState);
 
 const getNormalizedPage = (page: number): number => Math.max(1, Math.floor(page));
 
@@ -40,6 +43,26 @@ const getNormalizedTitleFilter = (title: string | null | undefined): string | nu
   const normalizedTitle = getNormalizedTitle(title).toLowerCase();
 
   return normalizedTitle === "" ? null : normalizedTitle;
+};
+
+const getNormalizedStateFilter = (
+  state: string | string[] | null | undefined,
+): string[] | string | null => {
+  if (!state) {
+    return null;
+  }
+
+  if (typeof state === "string") {
+    const normalizedState = state.trim().toLowerCase();
+
+    return normalizedState === "" ? null : normalizedState;
+  }
+
+  const normalizedStates = state
+    .map((stateValue) => (typeof stateValue === "string" ? stateValue.trim().toLowerCase() : ""))
+    .filter((stateValue) => stateValue !== "");
+
+  return normalizedStates.length > 0 ? normalizedStates : null;
 };
 
 const getPrimarySort = (sorts: RoomSort[]): RoomSort => sorts[0] ?? DEFAULT_SORT;
@@ -158,6 +181,7 @@ export const create = mutation({
 
     return await ctx.db.insert("rooms", {
       code,
+      state: DEFAULT_ROOM_STATE,
       title,
     });
   },
@@ -166,6 +190,7 @@ export const create = mutation({
 export const getTablePage = query({
   args: {
     filters: v.object({
+      state: v.optional(v.union(v.string(), v.array(v.string()), v.null())),
       title: v.optional(v.union(v.string(), v.null())),
     }),
     page: v.number(),
@@ -183,15 +208,23 @@ export const getTablePage = query({
     const primarySort = getPrimarySort(args.sort);
     const titleFilter = getNormalizedTitleFilter(args.filters.title);
     const roomDocuments = await ctx.db.query("rooms").take(MAX_TABLE_SCAN);
+    const stateFilter = getNormalizedStateFilter(args.filters.state);
+    const stateFilterValues = typeof stateFilter === "string" ? [stateFilter] : stateFilter;
     const filteredRoomDocuments = titleFilter
       ? roomDocuments.filter((room: RoomDocument) =>
           getSortableRoomTitle(room.title).startsWith(titleFilter),
         )
       : roomDocuments;
+    const stateFilteredRoomDocuments =
+      stateFilterValues !== null
+        ? filteredRoomDocuments.filter((room: RoomDocument) =>
+            stateFilterValues.includes(room.state.toLowerCase()),
+          )
+        : filteredRoomDocuments;
     const sortedRoomDocuments =
       titleFilter || primarySort.id === "title"
-        ? sortFilteredRoomDocuments(filteredRoomDocuments, primarySort)
-        : sortRoomDocumentsByCreationTime(filteredRoomDocuments, primarySort.desc);
+        ? sortFilteredRoomDocuments(stateFilteredRoomDocuments, primarySort)
+        : sortRoomDocumentsByCreationTime(stateFilteredRoomDocuments, primarySort.desc);
 
     const totalCount = sortedRoomDocuments.length;
     const pageCount = Math.ceil(totalCount / perPage);
@@ -206,6 +239,7 @@ export const getTablePage = query({
         code: room.code,
         createdAt: new Date(room._creationTime).toISOString(),
         id: room._id,
+        state: room.state,
         title: room.title,
       })),
       totalCount,
@@ -229,4 +263,35 @@ export const getByCode = query({
       .query("rooms")
       .withIndex("by_code", (indexQuery) => indexQuery.eq("code", args.code))
       .unique(),
+});
+
+export const changeStateByDelta = mutation({
+  args: {
+    id: v.id("rooms"),
+    direction: v.union(v.literal("left"), v.literal("right")),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.id);
+
+    if (room === null) {
+      throw new Error("Room not found.");
+    }
+
+    const currentStateIndex = getCurrentRoomStateIndex(room.state);
+
+    if (currentStateIndex === -1) {
+      throw new Error(`Invalid room state: ${room.state}.`);
+    }
+
+    const stateDelta = args.direction === "right" ? 1 : -1;
+    const nextStateIndex = currentStateIndex + stateDelta;
+
+    if (nextStateIndex < 0 || nextStateIndex >= ROOM_STATES.length) {
+      return room.state;
+    }
+
+    return await ctx.db.patch(args.id, {
+      state: ROOM_STATES[nextStateIndex],
+    });
+  },
 });
