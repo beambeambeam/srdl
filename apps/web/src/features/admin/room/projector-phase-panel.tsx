@@ -23,7 +23,13 @@ export function ProjectorPhasePanel({
   activePrompt,
   phase,
 }: ProjectorPhasePanelProps): JSX.Element {
-  const phaseLabel = phase === "guess" ? "Guessing Time!" : null;
+  let phaseLabel: string | null = null;
+
+  if (phase === "guess") {
+    phaseLabel = "Guessing Time!";
+  } else if (phase === "answer") {
+    phaseLabel = "Answer Reveal";
+  }
 
   if (phase === "waiting") {
     return (
@@ -91,6 +97,11 @@ export function ProjectorPhasePanel({
         </div>
       )}
       <Showblock answer={activePrompt.answer} />
+      {phase === "answer" ? (
+        <p className="font-heading text-4xl leading-tight sm:text-5xl lg:text-6xl">
+          {activePrompt.playerName}
+        </p>
+      ) : null}
     </section>
   );
 }

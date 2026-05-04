@@ -5,6 +5,7 @@ import type { GenericId } from "convex/values";
 import { useQuery } from "@tanstack/react-query";
 import type { JSX } from "react";
 
+import { AnswerStatePanel } from "@/features/room/answer-state-panel";
 import { GuessStatePanel } from "@/features/room/guess-state-panel";
 import { QuestioningForm } from "@/features/room/questioning-form";
 import { ShowStatePanel } from "@/features/room/show-state-panel";
@@ -24,13 +25,6 @@ const getFutureStateCopy = (
     return {
       description: "Guessing mechanics will be added here for players in a later update.",
       title: "Guessing phase coming next",
-    };
-  }
-
-  if (roomState.startsWith("ANSWER-")) {
-    return {
-      description: "Answer reveal mechanics will be added here for players in a later update.",
-      title: "Answer reveal phase coming next",
     };
   }
 
@@ -121,6 +115,33 @@ export function RoomStatePanel({ roomId, roomState }: RoomStatePanelProps): JSX.
 
     return (
       <GuessStatePanel
+        activePrompt={projectorState.activePrompt}
+        questionIndex={projectorState.questionIndex}
+        roomId={roomId}
+      />
+    );
+  }
+
+  if (roomState.startsWith("ANSWER-")) {
+    if (
+      projectorState === null ||
+      projectorState.activePrompt === null ||
+      projectorState.questionIndex === null
+    ) {
+      return (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyTitle>Prompt unavailable</EmptyTitle>
+            <EmptyDescription>
+              This room is in an answer state, but no selected answer is available yet.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
+    }
+
+    return (
+      <AnswerStatePanel
         activePrompt={projectorState.activePrompt}
         questionIndex={projectorState.questionIndex}
         roomId={roomId}
