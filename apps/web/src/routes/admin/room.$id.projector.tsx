@@ -3,9 +3,9 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/compo
 import type { GenericId } from "convex/values";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { api } from "@srdl/backend/convex/client";
-import { Badge } from "@srdl/ui/components/badge";
 import { useQuery } from "@tanstack/react-query";
-import { getRoomStateLabel } from "@/shared/games";
+
+import { ProjectorScreen } from "@/features/admin/room/projector-screen";
 
 function AdminRoomProjectorPage() {
   const { id } = useParams({
@@ -13,8 +13,8 @@ function AdminRoomProjectorPage() {
   });
 
   const roomQuery = useQuery(
-    convexQuery(api.games.rooms.getById, {
-      id: id as GenericId<"rooms">,
+    convexQuery(api.games.rooms.getProjectorState, {
+      roomId: id as GenericId<"rooms">,
     }),
   );
 
@@ -47,17 +47,7 @@ function AdminRoomProjectorPage() {
     );
   }
 
-  const room = roomQuery.data;
-
-  return (
-    <main className="flex h-full min-h-0 items-center justify-center p-4">
-      <div className="space-y-3 text-center">
-        <h1 className="font-heading text-4xl">{room.title}</h1>
-        <Badge variant="secondary">{getRoomStateLabel(room.state)}</Badge>
-        <p className="font-mono text-muted-foreground text-xl">{room.code}</p>
-      </div>
-    </main>
-  );
+  return <ProjectorScreen projectorState={roomQuery.data} />;
 }
 
 export const Route = createFileRoute("/admin/room/$id/projector")({
