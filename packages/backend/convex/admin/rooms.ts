@@ -10,7 +10,6 @@ const DEFAULT_SORT = {
 const MAX_PAGE_SIZE = 100;
 // This example intentionally bounds reads so it stays safe before moving to a cursor-first design.
 const MAX_TABLE_SCAN = 200;
-const ROOM_TITLE_RANGE_SUFFIX = "\uFFFF";
 
 interface RoomSort {
   desc: boolean;
@@ -38,18 +37,22 @@ const getNormalizedTitleFilter = (title: string | null | undefined): string | nu
 
 const getPrimarySort = (sorts: RoomSort[]): RoomSort => sorts[0] ?? DEFAULT_SORT;
 
+const getSortableRoomTitle = (title: string): string => title.toLowerCase();
+
 const compareRoomTitles = (
-  left: { titleLower: string },
-  right: { titleLower: string },
+  left: { title: string },
+  right: { title: string },
   desc: boolean,
 ): number => {
   const direction = desc ? -1 : 1;
+  const leftTitle = getSortableRoomTitle(left.title);
+  const rightTitle = getSortableRoomTitle(right.title);
 
-  if (left.titleLower === right.titleLower) {
+  if (leftTitle === rightTitle) {
     return 0;
   }
 
-  return left.titleLower > right.titleLower ? direction : -direction;
+  return leftTitle > rightTitle ? direction : -direction;
 };
 
 const compareRoomCreationTime = (
@@ -81,6 +84,17 @@ function sortFilteredRoomDocuments(
   );
 }
 
+function sortRoomDocumentsByCreationTime(
+  roomDocuments: RoomDocument[],
+  desc: boolean,
+): RoomDocument[] {
+  // `toSorted` is unavailable under the repo's current ES2022 target.
+  // eslint-disable-next-line unicorn/no-array-sort
+  return [...roomDocuments].sort((left: RoomDocument, right: RoomDocument) =>
+    compareRoomCreationTime(left, right, desc),
+  );
+}
+
 export const create = mutation({
   args: {
     title: v.string(),
@@ -94,7 +108,6 @@ export const create = mutation({
 
     return await ctx.db.insert("rooms", {
       title,
-      titleLower: title.toLowerCase(),
     });
   },
 });
@@ -118,33 +131,16 @@ export const getTablePage = query({
     const perPage = getNormalizedPerPage(args.perPage);
     const primarySort = getPrimarySort(args.sort);
     const titleFilter = getNormalizedTitleFilter(args.filters.title);
-    let roomDocuments: RoomDocument[];
-
-    if (titleFilter) {
-      roomDocuments = await ctx.db
-        .query("rooms")
-        .withIndex("by_title_lower", (queryBuilder) =>
-          queryBuilder
-            .gte("titleLower", titleFilter)
-            .lt("titleLower", `${titleFilter}${ROOM_TITLE_RANGE_SUFFIX}`),
+    const roomDocuments = await ctx.db.query("rooms").take(MAX_TABLE_SCAN);
+    const filteredRoomDocuments = titleFilter
+      ? roomDocuments.filter((room: RoomDocument) =>
+          getSortableRoomTitle(room.title).startsWith(titleFilter),
         )
-        .take(MAX_TABLE_SCAN);
-    } else if (primarySort.id === "title") {
-      roomDocuments = await ctx.db
-        .query("rooms")
-        .withIndex("by_title_lower")
-        .order(primarySort.desc ? "desc" : "asc")
-        .take(MAX_TABLE_SCAN);
-    } else {
-      roomDocuments = await ctx.db
-        .query("rooms")
-        .order(primarySort.desc ? "desc" : "asc")
-        .take(MAX_TABLE_SCAN);
-    }
-
-    const sortedRoomDocuments = titleFilter
-      ? sortFilteredRoomDocuments(roomDocuments, primarySort)
       : roomDocuments;
+    const sortedRoomDocuments =
+      titleFilter || primarySort.id === "title"
+        ? sortFilteredRoomDocuments(filteredRoomDocuments, primarySort)
+        : sortRoomDocumentsByCreationTime(filteredRoomDocuments, primarySort.desc);
 
     const totalCount = sortedRoomDocuments.length;
     const pageCount = Math.ceil(totalCount / perPage);
