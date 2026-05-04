@@ -1,6 +1,8 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@srdl/backend/convex/client";
+import { Link } from "@tanstack/react-router";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
+import { Button } from "@srdl/ui/components/button";
 import type { GenericId } from "convex/values";
 import { useQuery } from "@tanstack/react-query";
 import type { JSX } from "react";
@@ -146,6 +148,24 @@ export function RoomStatePanel({ roomId, roomState }: RoomStatePanelProps): JSX.
         questionIndex={projectorState.questionIndex}
         roomId={roomId}
       />
+    );
+  }
+
+  if (roomState === "WRAP UP") {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>Thank You for join our Campaign</EmptyTitle>
+          <EmptyDescription />
+          <div className="mt-4">
+            <Link to="/room">
+              <Button type="button" variant="default">
+                Go to rooms
+              </Button>
+            </Link>
+          </div>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
