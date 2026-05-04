@@ -23,6 +23,8 @@ export function ProjectorPhasePanel({
   activePrompt,
   phase,
 }: ProjectorPhasePanelProps): JSX.Element {
+  const phaseLabel = phase === "guess" ? "Guessing Time!" : null;
+
   if (phase === "waiting") {
     return (
       <Empty className="border-0">
@@ -79,5 +81,16 @@ export function ProjectorPhasePanel({
     );
   }
 
-  return <Showblock answer={activePrompt.answer} />;
+  return (
+    <section className="flex w-full max-w-6xl flex-col items-center gap-6 text-center">
+      {phaseLabel === null ? null : (
+        <div className="space-y-2">
+          <Badge className="px-4 py-1 text-sm uppercase tracking-[0.24em]" variant="secondary">
+            {phaseLabel}
+          </Badge>
+        </div>
+      )}
+      <Showblock answer={activePrompt.answer} />
+    </section>
+  );
 }
