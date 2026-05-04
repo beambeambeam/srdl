@@ -14,6 +14,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RoomRouteRouteImport } from './routes/room/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RoomRoomCodeRouteImport } from './routes/room/$room-code'
 import { Route as AdminRoomRouteImport } from './routes/admin/room'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomRoomCodeRoute = RoomRoomCodeRouteImport.update({
+  id: '/$room-code',
+  path: '/$room-code',
+  getParentRoute: () => RoomRouteRoute,
+} as any)
 const AdminRoomRoute = AdminRoomRouteImport.update({
   id: '/room',
   path: '/room',
@@ -62,32 +68,35 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
-  '/room': typeof RoomRouteRoute
+  '/room': typeof RoomRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/room': typeof AdminRoomRoute
+  '/room/$room-code': typeof RoomRoomCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
-  '/room': typeof RoomRouteRoute
+  '/room': typeof RoomRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/room': typeof AdminRoomRoute
+  '/room/$room-code': typeof RoomRoomCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
-  '/room': typeof RoomRouteRoute
+  '/room': typeof RoomRouteRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/sign-in': typeof SignInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/room': typeof AdminRoomRoute
+  '/room/$room-code': typeof RoomRoomCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$room-code'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$room-code'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -120,13 +131,14 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/admin/dashboard'
     | '/admin/room'
+    | '/room/$room-code'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
-  RoomRouteRoute: typeof RoomRouteRoute
+  RoomRouteRoute: typeof RoomRouteRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   SignInRoute: typeof SignInRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/room/$room-code': {
+      id: '/room/$room-code'
+      path: '/$room-code'
+      fullPath: '/room/$room-code'
+      preLoaderRoute: typeof RoomRoomCodeRouteImport
+      parentRoute: typeof RoomRouteRoute
+    }
     '/admin/room': {
       id: '/admin/room'
       path: '/room'
@@ -207,10 +226,22 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface RoomRouteRouteChildren {
+  RoomRoomCodeRoute: typeof RoomRoomCodeRoute
+}
+
+const RoomRouteRouteChildren: RoomRouteRouteChildren = {
+  RoomRoomCodeRoute: RoomRoomCodeRoute,
+}
+
+const RoomRouteRouteWithChildren = RoomRouteRoute._addFileChildren(
+  RoomRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
-  RoomRouteRoute: RoomRouteRoute,
+  RoomRouteRoute: RoomRouteRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   SignInRoute: SignInRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

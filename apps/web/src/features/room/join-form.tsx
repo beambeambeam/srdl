@@ -1,5 +1,6 @@
 "use client";
 
+import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import type { JSX } from "react";
 import { z } from "zod";
@@ -28,20 +29,27 @@ const roomCodeSchema = z.object({
     .string()
     .trim()
     .min(1, "Room code is required.")
-    .regex(/^[a-z]{6}$/, "Room code must be 6 lowercase letters."),
+    .regex(/^\d{6}$/, "Room code must be 6 digits."),
 });
 
 export default function JoinRoomForm(): JSX.Element {
+  const navigate = useNavigate({
+    from: "/room",
+  });
+
   const form = useForm({
     defaultValues: {
       code: "",
     },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
       const parsedValue = roomCodeSchema.parse(value);
-      const roomCode = parsedValue.code;
 
-      void roomCode;
-      // Room join submission is intentionally deferred until the real flow exists.
+      await navigate({
+        params: {
+          "room-code": parsedValue.code,
+        },
+        to: "/room/$room-code",
+      });
     },
     onSubmitInvalid: () => {
       const invalidInput = document.querySelector("[aria-invalid='true']");
@@ -72,7 +80,7 @@ export default function JoinRoomForm(): JSX.Element {
         </div>
         <CardHeader>
           <CardTitle>Join a room</CardTitle>
-          <CardDescription>Enter the 6-letter room code shared by the organizer.</CardDescription>
+          <CardDescription>Enter the 6-digit room code shared by the organizer.</CardDescription>
         </CardHeader>
         <CardContent>
           <FieldGroup>
@@ -89,17 +97,16 @@ export default function JoinRoomForm(): JSX.Element {
                       autoComplete="off"
                       autoCorrect="off"
                       id={field.name}
-                      inputMode="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
-                      placeholder="abcdef"
+                      placeholder="123456"
                       spellCheck={false}
                       value={field.state.value}
                     />
-                    <FieldDescription>
-                      Use the exact lowercase code provided to you.
-                    </FieldDescription>
+                    <FieldDescription>Use the exact 6-digit code provided to you.</FieldDescription>
                     {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
                   </Field>
                 );
