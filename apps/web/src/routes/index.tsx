@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import AppLogo from "@/components/logo";
+import { Button } from "@srdl/ui/components/button";
 
 function HomeComponent() {
   // const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
@@ -28,6 +29,9 @@ function HomeComponent() {
           </div>
         </CardContent>
       </Card> */}
+      <Link to="/">
+        <Button>Let's Play!</Button>
+      </Link>
     </div>
   );
 }
