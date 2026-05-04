@@ -42,13 +42,11 @@ export default function JoinRoomForm(): JSX.Element {
       code: "",
     },
     onSubmit: async ({ value }) => {
-      const parsedValue = roomCodeSchema.parse(value);
-
       await navigate({
         params: {
-          "room-code": parsedValue.code,
+          code: value.code,
         },
-        to: "/room/$room-code",
+        to: "/room/$code",
       });
     },
     onSubmitInvalid: () => {

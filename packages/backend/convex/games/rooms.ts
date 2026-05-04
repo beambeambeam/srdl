@@ -212,3 +212,21 @@ export const getTablePage = query({
     };
   },
 });
+
+export const getById = query({
+  args: {
+    id: v.id("rooms"),
+  },
+  handler: async (ctx, args) => await ctx.db.get(args.id),
+});
+
+export const getByCode = query({
+  args: {
+    code: v.string(),
+  },
+  handler: async (ctx, args) =>
+    await ctx.db
+      .query("rooms")
+      .withIndex("by_code", (indexQuery) => indexQuery.eq("code", args.code))
+      .unique(),
+});

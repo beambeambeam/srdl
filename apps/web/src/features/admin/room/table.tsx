@@ -1,5 +1,5 @@
 import { convexQuery } from "@convex-dev/react-query";
-import { Button } from "@srdl/ui/components/button";
+import { Button, buttonVariants } from "@srdl/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@srdl/ui/components/dialog";
-import { Text } from "lucide-react";
-import { api } from "@srdl/backend/convex/api";
+import { Monitor, Presentation, Text } from "lucide-react";
+import { api } from "@srdl/backend/convex/client";
 import { DataTableSkeleton } from "@srdl/ui/components/data-table/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { DataTable } from "@srdl/ui/components/data-table";
 import { DataTableColumnHeader } from "@srdl/ui/components/data-table/column-header";
 import { DataTableToolbar } from "@srdl/ui/components/data-table/toolbar";
 import { useDataTable, useDataTableQueryState } from "@srdl/ui/hooks/use-data-table";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import CreateRoomForm from "@/features/admin/room/create-room-form";
@@ -31,14 +32,6 @@ interface RoomRow {
   id: string;
   title: string;
   createdAt: string;
-}
-
-interface RoomTablePage {
-  rows: RoomRow[];
-  totalCount: number;
-  pageCount: number;
-  page: number;
-  perPage: number;
 }
 
 const getTitleFilter = (value: string | string[] | null | undefined): string | null => {
@@ -59,7 +52,15 @@ export function AdminRoomTable() {
     () => [
       {
         accessorKey: "title",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("title")}</div>,
+        cell: ({ row }) => (
+          <Link
+            className="font-medium hover:underline"
+            params={{ id: row.original.id }}
+            to="/admin/room/$id"
+          >
+            {row.getValue("title")}
+          </Link>
+        ),
         enableColumnFilter: true,
         header: ({ column }) => <DataTableColumnHeader column={column} label="Title" />,
         id: "title",
@@ -95,6 +96,35 @@ export function AdminRoomTable() {
           label: "Created At",
         },
       },
+      {
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-2">
+            <Link
+              aria-label={`Open ${row.original.title} room page`}
+              className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+              params={{ id: row.original.id }}
+              to="/admin/room/$id"
+            >
+              <Monitor />
+            </Link>
+            <Link
+              aria-label={`Open ${row.original.title} projector page`}
+              className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+              params={{ id: row.original.id }}
+              to="/admin/room/$id/projector"
+            >
+              <Presentation />
+            </Link>
+          </div>
+        ),
+        enableColumnFilter: false,
+        enableSorting: false,
+        header: () => <div className="text-right">Actions</div>,
+        id: "actions",
+        meta: {
+          label: "Actions",
+        },
+      },
     ],
     [],
   );
@@ -127,8 +157,8 @@ export function AdminRoomTable() {
     [queryState.filterValues.title, queryState.page, queryState.perPage, queryState.sorting],
   );
 
-  const roomPage = useQuery<RoomTablePage>({
-    ...convexQuery(api.admin.rooms.getTablePage, roomTableArgs),
+  const roomPage = useQuery({
+    ...convexQuery(api.games.rooms.getTablePage, roomTableArgs),
     placeholderData: keepPreviousData,
   });
 
@@ -166,7 +196,7 @@ export function AdminRoomTable() {
   });
 
   if (roomPage.isPending && !roomPage.data) {
-    return <DataTableSkeleton columnCount={3} filterCount={1} />;
+    return <DataTableSkeleton columnCount={4} filterCount={1} />;
   }
 
   if (roomPage.error) {

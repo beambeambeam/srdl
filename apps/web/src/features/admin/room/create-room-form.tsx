@@ -6,7 +6,7 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { api } from "@srdl/backend/convex/api";
+import { api } from "@srdl/backend/convex/client";
 import { Button } from "@srdl/ui/components/button";
 import {
   Field,
@@ -33,7 +33,7 @@ export default function CreateRoomForm({
   onCancel,
   onSuccess,
 }: CreateRoomFormProps): JSX.Element {
-  const createRoom = useMutation(api.admin.rooms.create);
+  const createRoom = useMutation(api.games.rooms.create);
 
   const form = useForm({
     defaultValues: {
