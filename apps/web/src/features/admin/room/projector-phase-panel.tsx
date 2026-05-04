@@ -48,10 +48,7 @@ export function ProjectorPhasePanel({
     return (
       <Empty className="border-0">
         <EmptyHeader className="max-w-2xl gap-4">
-          <EmptyTitle className="text-4xl sm:text-5xl">Game complete</EmptyTitle>
-          <EmptyDescription className="text-base sm:text-lg">
-            The room has reached the end of the game. Final recap screens can land here next.
-          </EmptyDescription>
+          <EmptyTitle className="text-4xl sm:text-5xl">Thank You for join our Campaign</EmptyTitle>
         </EmptyHeader>
       </Empty>
     );

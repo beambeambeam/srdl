@@ -30,8 +30,8 @@ const getFutureStateCopy = (
 
   if (roomState === "WRAP UP") {
     return {
-      description: "This game is complete. Wrap-up results and summaries will appear here later.",
-      title: "Game complete",
+      description: "",
+      title: "Thank You for join our Campaign",
     };
   }
 
