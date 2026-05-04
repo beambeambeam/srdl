@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
@@ -120,7 +118,7 @@ function SidebarProvider({
       state,
       toggleSidebar,
     }),
-    [state, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [state, setOpen, isMobile, openMobile, sidebarOpen, setOpenMobile, toggleSidebar],
   );
 
   return (

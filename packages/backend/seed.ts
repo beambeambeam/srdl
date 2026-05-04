@@ -1,7 +1,6 @@
 import { join } from "node:path";
 import type { ReadableStream } from "node:stream/web";
 import { TextDecoder } from "node:util";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 import { env } from "./env";

@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "motion/react";
 
 // Outer rounded rectangle — fill + stroke, common to both states
