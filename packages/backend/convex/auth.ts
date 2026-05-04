@@ -8,11 +8,17 @@ import type { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import authConfig from "./auth.config";
 
-const siteUrl = process.env.SITE_URL;
+const getSiteUrl = (): string => {
+  const siteUrl = process.env.SITE_URL;
 
-if (!siteUrl) {
-  throw new Error("SITE_URL is required");
-}
+  if (!siteUrl) {
+    throw new Error("SITE_URL is required");
+  }
+
+  return siteUrl;
+};
+
+const siteUrl = getSiteUrl();
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
