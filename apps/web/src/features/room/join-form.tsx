@@ -1,8 +1,12 @@
 "use client";
 
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@srdl/backend/convex/client";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import type { JSX } from "react";
+import { useState } from "react";
 import { z } from "zod";
 
 import AppLogo from "@/components/logo";
@@ -36,17 +40,33 @@ export default function JoinRoomForm(): JSX.Element {
   const navigate = useNavigate({
     from: "/room",
   });
+  const queryClient = useQueryClient();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
       code: "",
     },
     onSubmit: async ({ value }) => {
+      const parsedValue = roomCodeSchema.parse(value);
+      const room = await queryClient.fetchQuery(
+        convexQuery(api.games.rooms.getByCode, {
+          code: parsedValue.code,
+        }),
+      );
+
+      if (room === null) {
+        setSubmitError("Room not found. Check the 6-digit code and try again.");
+        return;
+      }
+
+      setSubmitError(null);
       await navigate({
         params: {
-          code: value.code,
+          id: room._id,
         },
-        to: "/room/$code",
+        replace: true,
+        to: "/room/$id",
       });
     },
     onSubmitInvalid: () => {
@@ -85,12 +105,13 @@ export default function JoinRoomForm(): JSX.Element {
             <form.Field name="code">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const hasError = isInvalid || submitError !== null;
 
                 return (
-                  <Field data-invalid={isInvalid ? true : undefined}>
+                  <Field data-invalid={hasError ? true : undefined}>
                     <FieldLabel htmlFor={field.name}>Room code</FieldLabel>
                     <Input
-                      aria-invalid={isInvalid}
+                      aria-invalid={hasError}
                       autoCapitalize="none"
                       autoComplete="off"
                       autoCorrect="off"
@@ -99,13 +120,26 @@ export default function JoinRoomForm(): JSX.Element {
                       pattern="[0-9]{6}"
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(event) => field.handleChange(event.target.value)}
+                      onChange={(event) => {
+                        if (submitError !== null) {
+                          setSubmitError(null);
+                        }
+                        field.handleChange(event.target.value);
+                      }}
                       placeholder="123456"
                       spellCheck={false}
                       value={field.state.value}
                     />
                     <FieldDescription>Use the exact 6-digit code provided to you.</FieldDescription>
-                    {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                    {hasError ? (
+                      <FieldError
+                        errors={
+                          submitError === null
+                            ? field.state.meta.errors
+                            : [...field.state.meta.errors, submitError]
+                        }
+                      />
+                    ) : null}
                   </Field>
                 );
               }}
