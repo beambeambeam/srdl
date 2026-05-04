@@ -11,14 +11,16 @@
     "prefix": ""
   },
   "iconLibrary": "lucide",
+  "menuColor": "default-translucent",
+  "menuAccent": "subtle",
   "aliases": {
     "components": "@srdl/ui/components",
     "utils": "@srdl/ui/lib/utils",
-    "hooks": "@srdl/ui/hooks",
+    "ui": "@srdl/ui/components",
     "lib": "@srdl/ui/lib",
-    "ui": "@srdl/ui/components"
+    "hooks": "@srdl/ui/hooks"
   },
-  "menuColor": "default-translucent",
-  "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+  }
 }
