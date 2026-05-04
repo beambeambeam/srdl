@@ -7,6 +7,14 @@ import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react
 import { useQuery } from "@tanstack/react-query";
 
 import { RoomStateController } from "../../features/admin/room/state-controller";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@srdl/ui/components/card";
+import { getRoomStateLabel } from "@/shared/games";
 
 function AdminRoomDetailPage() {
   const { id } = useParams({
@@ -61,7 +69,18 @@ function AdminRoomDetailPage() {
       <div className="flex flex-wrap items-center gap-2 h-fit w-full">
         <h3 className="text-3xl">{room.title}</h3>
         <Badge>{room.code}</Badge>
-        <RoomStateController roomId={room._id} roomState={room.state} />
+        <Card className="w-full">
+          <CardHeader className="justify-center md:justify-start">
+            <CardTitle>Room States</CardTitle>
+            <CardDescription>
+              <span className="pr-2">Currently :</span>
+              <Badge variant="secondary">{getRoomStateLabel(room.state)}</Badge>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RoomStateController roomId={room._id} roomState={room.state} />
+          </CardContent>
+        </Card>
       </div>
     </main>
   );
