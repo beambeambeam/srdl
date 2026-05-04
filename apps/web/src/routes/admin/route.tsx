@@ -6,11 +6,13 @@ function AdminLayout() {
   return (
     <SidebarProvider>
       <AdminSidebar />
-      <SidebarInset>
-        <div className="m-1">
+      <SidebarInset className="min-h-0 overflow-hidden">
+        <div className="flex shrink-0 items-start p-1">
           <SidebarTrigger />
         </div>
-        <Outlet />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Outlet />
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
