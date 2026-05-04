@@ -7,6 +7,7 @@ import { Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react
 import { useQuery } from "@tanstack/react-query";
 
 import { RoomStateController } from "../../features/admin/room/state-controller";
+import { Timer } from "../../features/admin/room/timer";
 import {
   Card,
   CardContent,
@@ -133,7 +134,9 @@ function AdminRoomDetailPage() {
             </CardContent>
           </Card>
           <Card className="h-fit w-full">
-            <CardContent>Tab2</CardContent>
+            <CardContent>
+              <Timer />
+            </CardContent>
           </Card>
         </div>
       </div>
