@@ -140,7 +140,7 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
                 >
                   <span
                     aria-current={variant === "current" ? "step" : undefined}
-                    className={`block max-w-14 text-center text-xs leading-none origin-bottom-left -rotate-35 translate-y-0.5 whitespace-nowrap ${getLabelClassName(variant)}`}
+                    className={`block max-w-14 text-center text-lg leading-none origin-bottom-left -rotate-35 translate-y-0.5 whitespace-nowrap ${getLabelClassName(variant)}`}
                   >
                     {getTimelineLabel(state)}
                   </span>
@@ -159,7 +159,7 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
                   <div
                     key={state}
                     aria-hidden="true"
-                    className={`h-20 ${getSegmentClassName(variant)} ${isLast ? "" : "border-r border-border"}`}
+                    className={`h-4 ${getSegmentClassName(variant)} ${isLast ? "" : "border-r border-border"}`}
                   />
                 );
               })}
