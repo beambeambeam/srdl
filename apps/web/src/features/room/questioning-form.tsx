@@ -50,7 +50,6 @@ import { getRoomStateLabel } from "@/shared/games";
 const ONBOARDING_ID_STORAGE_KEY = "id";
 const ONBOARDING_NICKNAME_STORAGE_KEY = "nickname";
 const WAITING_STATE = "WAITING";
-const ONE_TIME_FORM_DESCRIPTION = "This form can only be submitted once for this room.";
 const stringLocalStorageOptions: LocalStorageOptions<string> = {
   defaultValue: "",
   deserializer: (value) => value,
@@ -77,13 +76,11 @@ interface QuestioningFormProps {
 }
 
 interface QuestionFieldConfig {
-  description: string;
   label: string;
   name: keyof z.infer<typeof questioningFormSchema>;
 }
 
 const QUESTION_FIELDS: QuestionFieldConfig[] = WAITING_QUESTION_LABELS.map((label, index) => ({
-  description: ONE_TIME_FORM_DESCRIPTION,
   label,
   name: `question${index + 1}` as keyof z.infer<typeof questioningFormSchema>,
 }));
@@ -331,7 +328,7 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
                           rows={4}
                           value={field.state.value}
                         />
-                        <FieldDescription>{questionField.description}</FieldDescription>
+                        <FieldDescription />
                         {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
                       </Field>
                     );
