@@ -66,7 +66,7 @@ function AdminRoomDetailPage() {
 
   return (
     <main className="flex w-full h-full min-h-0 p-4">
-      <div className="flex flex-wrap items-center gap-2 h-fit w-full">
+      <div className="flex flex-wrap items-center gap-4 h-fit w-full">
         <h3 className="text-3xl">{room.title}</h3>
         <Badge>{room.code}</Badge>
         <Card className="w-full">
@@ -81,6 +81,14 @@ function AdminRoomDetailPage() {
             <RoomStateController roomId={room._id} roomState={room.state} />
           </CardContent>
         </Card>
+        <div className="grid grid-cols-[2fr_1fr] gap-4 w-full">
+          <Card className="h-fit w-full">
+            <CardContent>Tab1</CardContent>
+          </Card>
+          <Card className="h-fit w-full">
+            <CardContent>Tab2</CardContent>
+          </Card>
+        </div>
       </div>
     </main>
   );
