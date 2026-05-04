@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { RoomStateController } from "../../features/admin/room/state-controller";
 import { Timer } from "../../features/admin/room/timer";
+import { WaitingTable } from "../../features/admin/room/waiting-table";
 import {
   Card,
   CardContent,
@@ -113,7 +114,7 @@ function AdminRoomDetailPage() {
                   </TabsList>
                 </div>
                 <TabsContent value="waiting" className="pt-2">
-                  Waiting
+                  <WaitingTable roomId={room._id} />
                 </TabsContent>
                 <TabsContent value="question-1" className="pt-2">
                   Question 1
