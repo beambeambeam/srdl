@@ -13,6 +13,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 
 import { ThemeShell } from "@/components/theme-shell";
+import { OnboardingGate } from "@/components/onboarding-gate";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
@@ -40,7 +41,9 @@ function RootDocument() {
         <body>
           <ThemeShell>
             <div className="grid h-svh grid-rows-[auto_1fr]">
-              <Outlet />
+              <OnboardingGate>
+                <Outlet />
+              </OnboardingGate>
             </div>
             <Toaster richColors />
           </ThemeShell>
