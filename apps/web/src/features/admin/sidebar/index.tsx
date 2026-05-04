@@ -5,8 +5,12 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenuButton,
 } from "@srdl/ui/components/sidebar";
+import { Link } from "@tanstack/react-router";
+import { Layers2Icon } from "lucide-react";
 
 export function AdminSidebar() {
   return (
@@ -16,7 +20,15 @@ export function AdminSidebar() {
         <p className="font-heading">Welcome to Console!</p>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup />
+        <SidebarGroup>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <Link to="/admin/dashboard">
+            <SidebarMenuButton className="cursor-pointer">
+              <Layers2Icon />
+              <span>Dashboard</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarGroup>
         <SidebarGroup />
       </SidebarContent>
       <SidebarFooter>
