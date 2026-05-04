@@ -84,7 +84,9 @@ export const getWrapUpSummaryByRoom = query({
       summaryByPlayer.set(guess.guesserPlayerId, existingSummary);
     }
 
-    return [...summaryByPlayer.values()].toSorted((left, right) => {
+    const summaryRows = [...summaryByPlayer.values()];
+
+    return summaryRows.toSorted((left: WrapUpSummaryRow, right: WrapUpSummaryRow) => {
       if (left.correctCount !== right.correctCount) {
         return right.correctCount - left.correctCount;
       }
