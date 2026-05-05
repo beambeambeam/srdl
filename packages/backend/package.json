@@ -17,8 +17,7 @@
   },
   "scripts": {
     "dev": "convex dev",
-    "dev:setup": "convex dev --configure --until-success",
-    "seed": "bun run ./seed.ts"
+    "dev:setup": "convex dev --configure --until-success"
   },
   "dependencies": {
     "@convex-dev/better-auth": "catalog:",
