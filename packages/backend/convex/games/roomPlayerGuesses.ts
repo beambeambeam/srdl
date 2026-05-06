@@ -2,7 +2,7 @@ import { v } from "convex/values";
 
 import type { Doc, Id } from "../_generated/dataModel";
 import { query, mutation } from "../_generated/server";
-import { getQuestionIndexes, getRoomQuestionCount } from "../roomStates";
+import { getQuestionIndexes, getResolvedRoomQuestionCount } from "../roomStates";
 import { getQuestionIndexFromRoomState, isGuessState } from "./roomStatePrompts";
 
 const getTrimmedValue = (value: string): string => value.trim();
@@ -128,7 +128,7 @@ export const create = mutation({
       throw new Error("Guess question does not match the current room state.");
     }
 
-    const questionIndexes = getQuestionIndexes(getRoomQuestionCount(room.questionCount));
+    const questionIndexes = getQuestionIndexes(getResolvedRoomQuestionCount(room));
 
     if (!questionIndexes.includes(args.questionIndex)) {
       throw new Error("Selected question is not available for this room.");

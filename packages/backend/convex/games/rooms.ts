@@ -6,12 +6,13 @@ import {
   DEFAULT_NEW_ROOM_QUESTION_COUNT,
   DEFAULT_ROOM_STATE,
   getQuestionIndexes,
-  getRoomQuestionCount,
+  getResolvedRoomQuestionCount,
+  getResolvedRoomQuestions,
   getRoomStatesForQuestionCount,
   MAX_ROOM_QUESTION_COUNT,
   MIN_ROOM_QUESTION_COUNT,
 } from "../roomStates";
-import type { RoomState } from "../roomStates";
+import type { RoomState, StoredRoomQuestion } from "../roomStates";
 import {
   getQuestionIndexFromRoomState,
   isAnswerState,
@@ -47,17 +48,32 @@ interface PromptSelection {
   submissionId: RoomPlayerSubmissionDocument["_id"];
 }
 
+interface RoomQuestionInput {
+  id: string;
+  text: string;
+}
+
 const getNormalizedPage = (page: number): number => Math.max(1, Math.floor(page));
 
 const getNormalizedPerPage = (perPage: number): number =>
   Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(perPage)));
 
 const getNormalizedTitle = (title: string): string => title.trim();
+const getNormalizedQuestionId = (questionId: string): string => questionId.trim();
+const getNormalizedQuestionText = (questionText: string): string => questionText.trim();
 const isValidRoomCode = (code: string): boolean => ROOM_CODE_REGEX.test(code);
 const isValidQuestionCount = (questionCount: number): boolean =>
   Number.isInteger(questionCount) &&
   questionCount >= MIN_ROOM_QUESTION_COUNT &&
   questionCount <= MAX_ROOM_QUESTION_COUNT;
+const isValidQuestionList = (questions: RoomQuestionInput[]): boolean =>
+  questions.length >= MIN_ROOM_QUESTION_COUNT &&
+  questions.length <= MAX_ROOM_QUESTION_COUNT &&
+  questions.every(
+    (question) =>
+      getNormalizedQuestionId(question.id) !== "" &&
+      getNormalizedQuestionText(question.text) !== "",
+  );
 const generateSixDigitRoomCode = (): string =>
   Math.floor(Math.random() * 1_000_000)
     .toString()
@@ -66,6 +82,12 @@ const getRandomSubmission = (
   submissions: RoomPlayerSubmissionDocument[],
 ): RoomPlayerSubmissionDocument =>
   submissions[Math.floor(Math.random() * submissions.length)] as RoomPlayerSubmissionDocument;
+
+const getNormalizedStoredQuestions = (questions: RoomQuestionInput[]): StoredRoomQuestion[] =>
+  questions.map((question) => ({
+    id: getNormalizedQuestionId(question.id),
+    text: getNormalizedQuestionText(question.text),
+  }));
 
 const getProjectorPhase = (
   state: string,
@@ -257,10 +279,31 @@ function sortRoomDocumentsByCreationTime(
   );
 }
 
+const getRoomView = (room: RoomDocument) => {
+  const questions = getResolvedRoomQuestions(room);
+
+  return {
+    _id: room._id,
+    code: room.code,
+    questionCount: questions.length,
+    questions,
+    state: room.state,
+    title: room.title,
+  };
+};
+
 export const create = mutation({
   args: {
     code: v.optional(v.string()),
     questionCount: v.optional(v.number()),
+    questions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          text: v.string(),
+        }),
+      ),
+    ),
     title: v.string(),
   },
   handler: async (ctx, args) => {
@@ -270,12 +313,25 @@ export const create = mutation({
       throw new Error("Room title is required.");
     }
 
-    const questionCount = args.questionCount ?? DEFAULT_NEW_ROOM_QUESTION_COUNT;
+    const normalizedQuestions =
+      args.questions === undefined ? undefined : getNormalizedStoredQuestions(args.questions);
+    const questionCount =
+      args.questionCount ?? normalizedQuestions?.length ?? DEFAULT_NEW_ROOM_QUESTION_COUNT;
 
     if (!isValidQuestionCount(questionCount)) {
       throw new Error(
         `Question count must be an integer between ${MIN_ROOM_QUESTION_COUNT} and ${MAX_ROOM_QUESTION_COUNT}.`,
       );
+    }
+
+    if (normalizedQuestions !== undefined) {
+      if (!isValidQuestionList(normalizedQuestions)) {
+        throw new Error("Room questions must contain between 1 and 10 non-empty prompts.");
+      }
+
+      if (normalizedQuestions.length !== questionCount) {
+        throw new Error("Question count must match the number of question rows.");
+      }
     }
 
     let code: string;
@@ -323,6 +379,7 @@ export const create = mutation({
     return await ctx.db.insert("rooms", {
       code,
       questionCount,
+      questions: normalizedQuestions,
       state: DEFAULT_ROOM_STATE,
       title,
     });
@@ -381,7 +438,7 @@ export const getTablePage = query({
         code: room.code,
         createdAt: new Date(room._creationTime).toISOString(),
         id: room._id,
-        questionCount: getRoomQuestionCount(room.questionCount),
+        questionCount: getResolvedRoomQuestionCount(room),
         state: room.state,
         title: room.title,
       })),
@@ -408,6 +465,31 @@ export const getByCode = query({
       .unique(),
 });
 
+export const getByIdForView = query({
+  args: {
+    id: v.id("rooms"),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.id);
+
+    return room === null ? null : getRoomView(room);
+  },
+});
+
+export const getByCodeForView = query({
+  args: {
+    code: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db
+      .query("rooms")
+      .withIndex("by_code", (indexQuery) => indexQuery.eq("code", args.code))
+      .unique();
+
+    return room === null ? null : getRoomView(room);
+  },
+});
+
 export const getProjectorState = query({
   args: {
     roomId: v.id("rooms"),
@@ -419,6 +501,7 @@ export const getProjectorState = query({
       return null;
     }
 
+    const questions = getResolvedRoomQuestions(room);
     const questionIndex = getQuestionIndexFromRoomState(room.state);
     const phase = getProjectorPhase(room.state);
     const isPromptState = isPromptDrivenState(room.state);
@@ -440,6 +523,8 @@ export const getProjectorState = query({
       activePrompt,
       phase,
       questionIndex,
+      questionText: questionIndex === null ? null : (questions[questionIndex]?.text ?? null),
+      questions,
       roomCode: room.code,
       roomId: room._id,
       roomState: room.state,
@@ -460,7 +545,8 @@ export const changeStateByDelta = mutation({
       throw new Error("Room not found.");
     }
 
-    const roomStates = getRoomStatesForQuestionCount(getRoomQuestionCount(room.questionCount));
+    const questionCount = getResolvedRoomQuestionCount(room);
+    const roomStates = getRoomStatesForQuestionCount(questionCount);
     const currentStateIndex = roomStates.indexOf(room.state as RoomState);
 
     if (currentStateIndex === -1) {
@@ -491,7 +577,7 @@ export const changeStateByDelta = mutation({
         throw new Error(`Unable to determine question index for state ${nextState}.`);
       }
 
-      const questionIndexes = getQuestionIndexes(getRoomQuestionCount(room.questionCount));
+      const questionIndexes = getQuestionIndexes(questionCount);
 
       if (!questionIndexes.includes(nextQuestionIndex)) {
         throw new Error(`Question ${nextQuestionIndex + 1} is not available for this room.`);
@@ -524,7 +610,7 @@ export const changeStateByDelta = mutation({
         throw new Error(`Unable to determine question index for state ${nextState}.`);
       }
 
-      const questionIndexes = getQuestionIndexes(getRoomQuestionCount(room.questionCount));
+      const questionIndexes = getQuestionIndexes(questionCount);
 
       if (!questionIndexes.includes(nextQuestionIndex)) {
         throw new Error(`Question ${nextQuestionIndex + 1} is not available for this room.`);
