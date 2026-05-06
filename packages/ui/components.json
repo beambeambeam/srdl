@@ -22,7 +22,6 @@
   },
   "registries": {
     "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json",
-    "@diceui": "https://diceui.com/r/{name}.json",
-    "@shark": "https://shark.vini.one/r/{name}.json"
+    "@diceui": "https://diceui.com/r/{name}.json"
   }
 }
