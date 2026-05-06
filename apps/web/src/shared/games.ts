@@ -19,6 +19,11 @@ const QUESTION_ORDINALS = [
 type QuestionOrdinal = (typeof QUESTION_ORDINALS)[number];
 type PromptRoomStatePhase = "SHOW" | "GUESS" | "ANSWER";
 
+export interface RoomQuestion {
+  id: string;
+  text: string;
+}
+
 export type PromptDrivenRoomState = `${PromptRoomStatePhase}-${QuestionOrdinal}-QUESTION`;
 export type RoomState = "WAITING" | "WRAP UP" | PromptDrivenRoomState;
 

@@ -18,10 +18,10 @@ import { useQuery } from "@tanstack/react-query";
 import type { GenericId } from "convex/values";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
-import { getQuestionIndexes, getQuestionLabel } from "@/shared/games";
+import type { RoomQuestion } from "@/shared/games";
 
 interface WaitingTableProps {
-  questionCount: number;
+  questions: RoomQuestion[];
   roomId: GenericId<"rooms">;
 }
 
@@ -33,13 +33,9 @@ interface WaitingSubmissionRow {
   submittedAt: number;
 }
 
-export function WaitingTable({ questionCount, roomId }: WaitingTableProps): JSX.Element {
+export function WaitingTable({ questions, roomId }: WaitingTableProps): JSX.Element {
   const [selectedSubmission, setSelectedSubmission] = useState<WaitingSubmissionRow | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const questionLabels = useMemo(
-    () => getQuestionIndexes(questionCount).map((questionIndex) => getQuestionLabel(questionIndex)),
-    [questionCount],
-  );
 
   const submissionsQuery = useQuery(
     convexQuery(api.games.roomPlayerSubmissions.listByRoom, {
@@ -167,9 +163,9 @@ export function WaitingTable({ questionCount, roomId }: WaitingTableProps): JSX.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3">
-            {questionLabels.map((label, index) => (
-              <div key={label} className="flex flex-col gap-1 rounded-lg border p-3">
-                <p className="font-medium text-sm">{label}</p>
+            {questions.map((question, index) => (
+              <div key={question.id} className="flex flex-col gap-1 rounded-lg border p-3">
+                <p className="font-medium text-sm">{question.text}</p>
                 <p className="text-muted-foreground text-sm whitespace-pre-wrap">
                   {selectedSubmission?.answers[index] ?? "-"}
                 </p>

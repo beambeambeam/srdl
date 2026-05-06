@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "../_generated/server";
-import { getRoomQuestionCount } from "../roomStates";
+import { getResolvedRoomQuestionCount } from "../roomStates";
 
 const MAX_ANSWER_LENGTH = 280;
 
@@ -52,7 +52,7 @@ export const create = mutation({
       throw new Error("Room not found.");
     }
 
-    const questionCount = getRoomQuestionCount(room.questionCount);
+    const questionCount = getResolvedRoomQuestionCount(room);
 
     const playerId = getTrimmedValue(args.playerId);
     const playerName = getTrimmedValue(args.playerName);

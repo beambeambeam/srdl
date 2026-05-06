@@ -19,12 +19,9 @@ import {
   CardTitle,
 } from "@srdl/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@srdl/ui/components/tabs";
-import {
-  getQuestionIndexes,
-  getQuestionLabel,
-  getRoomQuestionCount,
-  getRoomStateLabel,
-} from "@/shared/games";
+import { getRoomStateLabel } from "@/shared/games";
+
+const getQuestionTabValue = (questionIndex: number): string => `question-${questionIndex + 1}`;
 
 function AdminRoomDetailPage() {
   const { id } = useParams({
@@ -34,7 +31,7 @@ function AdminRoomDetailPage() {
     select: (state) => state.pathname,
   });
   const roomQuery = useQuery(
-    convexQuery(api.games.rooms.getById, {
+    convexQuery(api.games.rooms.getByIdForView, {
       id: id as GenericId<"rooms">,
     }),
   );
@@ -73,8 +70,7 @@ function AdminRoomDetailPage() {
   }
 
   const room = roomQuery.data;
-  const questionCount = getRoomQuestionCount(room.questionCount);
-  const questionIndexes = getQuestionIndexes(questionCount);
+  const questionCount = room.questions.length;
 
   return (
     <main className="flex w-full h-full min-h-0 p-4">
@@ -109,13 +105,13 @@ function AdminRoomDetailPage() {
                     <TabsTrigger value="waiting" className="shrink-0">
                       Waiting
                     </TabsTrigger>
-                    {questionIndexes.map((questionIndex) => (
+                    {room.questions.map((question, questionIndex) => (
                       <TabsTrigger
-                        key={questionIndex}
-                        value={`question-${questionIndex + 1}`}
+                        key={question.id}
+                        value={getQuestionTabValue(questionIndex)}
                         className="shrink-0"
                       >
-                        {getQuestionLabel(questionIndex)}
+                        {`Question ${questionIndex + 1}`}
                       </TabsTrigger>
                     ))}
                     <TabsTrigger value="wrap-up" className="shrink-0">
@@ -124,17 +120,25 @@ function AdminRoomDetailPage() {
                   </TabsList>
                 </div>
                 <TabsContent value="waiting" className="pt-2">
-                  <WaitingTable questionCount={questionCount} roomId={room._id} />
+                  <WaitingTable questions={room.questions} roomId={room._id} />
                 </TabsContent>
-                {questionIndexes.map((questionIndex) => (
+                {room.questions.map((question, questionIndex) => (
                   <TabsContent
-                    key={questionIndex}
-                    value={`question-${questionIndex + 1}`}
-                    className="pt-2"
+                    key={question.id}
+                    value={getQuestionTabValue(questionIndex)}
+                    className="space-y-3 pt-2"
                   >
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide">
+                        Prompt
+                      </p>
+                      <p className="mt-1 font-medium text-sm whitespace-pre-wrap">
+                        {question.text}
+                      </p>
+                    </div>
                     <QuestionAnswerTable
                       questionIndex={questionIndex}
-                      questionLabel={getQuestionLabel(questionIndex)}
+                      questionLabel={question.text}
                       roomId={room._id}
                     />
                   </TabsContent>
