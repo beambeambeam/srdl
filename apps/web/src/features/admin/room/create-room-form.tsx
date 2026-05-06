@@ -16,9 +16,27 @@ import {
   FieldLabel,
 } from "@srdl/ui/components/field";
 import { Input } from "@srdl/ui/components/input";
+import {
+  DEFAULT_NEW_ROOM_QUESTION_COUNT,
+  MAX_ROOM_QUESTION_COUNT,
+  MIN_ROOM_QUESTION_COUNT,
+} from "@/shared/games";
 
 const createRoomSchema = z.object({
   code: z.string().regex(/^\d{6}$/, "Room code must be 6 digits."),
+  questionCount: z
+    .string()
+    .trim()
+    .regex(/^\d+$/, "Question count must be a whole number.")
+    .refine((value) => {
+      const questionCount = Number(value);
+
+      return (
+        Number.isInteger(questionCount) &&
+        questionCount >= MIN_ROOM_QUESTION_COUNT &&
+        questionCount <= MAX_ROOM_QUESTION_COUNT
+      );
+    }, `Question count must be between ${MIN_ROOM_QUESTION_COUNT} and ${MAX_ROOM_QUESTION_COUNT}.`),
   title: z.string().trim().min(1, "Room title is required."),
 });
 
@@ -38,6 +56,7 @@ export default function CreateRoomForm({
   const form = useForm({
     defaultValues: {
       code: initialCode,
+      questionCount: String(DEFAULT_NEW_ROOM_QUESTION_COUNT),
       title: "",
     },
     onSubmit: async ({ value }) => {
@@ -46,6 +65,7 @@ export default function CreateRoomForm({
       try {
         await createRoom({
           code: parsedValue.code,
+          questionCount: Number(parsedValue.questionCount),
           title: parsedValue.title,
         });
         toast.success("Room created successfully.");
@@ -126,6 +146,36 @@ export default function CreateRoomForm({
                   value={field.state.value}
                 />
                 <FieldDescription>Room codes are generated automatically.</FieldDescription>
+                {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+              </Field>
+            );
+          }}
+        </form.Field>
+
+        <form.Field name="questionCount">
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid ? true : undefined}>
+                <FieldLabel htmlFor={field.name}>Question count</FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id={field.name}
+                  inputMode="numeric"
+                  max={MAX_ROOM_QUESTION_COUNT}
+                  min={MIN_ROOM_QUESTION_COUNT}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder={String(DEFAULT_NEW_ROOM_QUESTION_COUNT)}
+                  step={1}
+                  type="number"
+                  value={field.state.value}
+                />
+                <FieldDescription>
+                  Choose how many questions players must answer for this room.
+                </FieldDescription>
                 {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
               </Field>
             );
