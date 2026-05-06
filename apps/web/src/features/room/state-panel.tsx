@@ -1,8 +1,6 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@srdl/backend/convex/client";
-import { Link } from "@tanstack/react-router";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@srdl/ui/components/empty";
-import { Button } from "@srdl/ui/components/button";
 import type { GenericId } from "convex/values";
 import { useQuery } from "@tanstack/react-query";
 import type { JSX } from "react";
@@ -11,6 +9,7 @@ import { AnswerStatePanel } from "@/features/room/answer-state-panel";
 import { GuessStatePanel } from "@/features/room/guess-state-panel";
 import { QuestioningForm } from "@/features/room/questioning-form";
 import { ShowStatePanel } from "@/features/room/show-state-panel";
+import { WrapUpStatePanel } from "@/features/room/wrap-up-state-panel";
 import type { RoomQuestion } from "@/shared/games";
 
 interface RoomStatePanelProps {
@@ -154,21 +153,7 @@ export function RoomStatePanel({ questions, roomId, roomState }: RoomStatePanelP
   }
 
   if (roomState === "WRAP UP") {
-    return (
-      <Empty className="border">
-        <EmptyHeader>
-          <EmptyTitle>Thank You for join our Campaign</EmptyTitle>
-          <EmptyDescription />
-          <div className="mt-4">
-            <Link to="/room">
-              <Button type="button" variant="default">
-                Go to rooms
-              </Button>
-            </Link>
-          </div>
-        </EmptyHeader>
-      </Empty>
-    );
+    return <WrapUpStatePanel roomId={roomId} />;
   }
 
   const stateCopy = getFutureStateCopy(roomState);
