@@ -1,16 +1,16 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "../_generated/server";
+import { getRoomQuestionCount } from "../roomStates";
 
-const WAITING_QUESTION_COUNT = 4;
 const MAX_ANSWER_LENGTH = 280;
 
 const getTrimmedValue = (value: string): string => value.trim();
 
 const getNormalizedAnswers = (answers: string[]): string[] => answers.map(getTrimmedValue);
 
-const isValidAnswerList = (answers: string[]): boolean =>
-  answers.length === WAITING_QUESTION_COUNT &&
+const isValidAnswerList = (answers: string[], questionCount: number): boolean =>
+  answers.length === questionCount &&
   answers.every((answer) => answer !== "" && answer.length <= MAX_ANSWER_LENGTH);
 
 export const getForRoomAndPlayer = query({
@@ -52,6 +52,8 @@ export const create = mutation({
       throw new Error("Room not found.");
     }
 
+    const questionCount = getRoomQuestionCount(room.questionCount);
+
     const playerId = getTrimmedValue(args.playerId);
     const playerName = getTrimmedValue(args.playerName);
     const answers = getNormalizedAnswers(args.answers);
@@ -64,8 +66,8 @@ export const create = mutation({
       throw new Error("Player name is required.");
     }
 
-    if (!isValidAnswerList(answers)) {
-      throw new Error("Exactly 4 non-empty answers are required.");
+    if (!isValidAnswerList(answers, questionCount)) {
+      throw new Error(`Exactly ${questionCount} non-empty answers are required.`);
     }
 
     const existingSubmission = await ctx.db

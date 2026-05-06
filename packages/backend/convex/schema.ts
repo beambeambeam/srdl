@@ -53,6 +53,7 @@ export default defineSchema({
         }),
       ),
     ),
+    questionCount: v.optional(v.number()),
     state: v.union(...roomStateValidators),
     title: v.string(),
   }).index("by_code", ["code"]),

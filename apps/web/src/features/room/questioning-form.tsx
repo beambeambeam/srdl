@@ -40,12 +40,8 @@ import type { LocalStorageOptions } from "@srdl/ui/hooks/use-local-storage";
 import { useLocalStorage } from "@srdl/ui/hooks/use-local-storage";
 import { Textarea } from "@srdl/ui/components/textarea";
 
-import {
-  MAX_WAITING_ANSWER_LENGTH,
-  WAITING_QUESTION_COUNT,
-  WAITING_QUESTION_LABELS,
-} from "@/features/room/constants";
-import { getRoomStateLabel } from "@/shared/games";
+import { MAX_WAITING_ANSWER_LENGTH } from "@/features/room/constants";
+import { getQuestionIndexes, getQuestionLabel, getRoomStateLabel } from "@/shared/games";
 
 const ONBOARDING_ID_STORAGE_KEY = "id";
 const ONBOARDING_NICKNAME_STORAGE_KEY = "nickname";
@@ -63,48 +59,59 @@ const waitingQuestionSchema = z
     MAX_WAITING_ANSWER_LENGTH,
     `Answer must be ${MAX_WAITING_ANSWER_LENGTH} characters or fewer.`,
   );
-const questioningFormSchema = z.object({
-  question1: waitingQuestionSchema,
-  question2: waitingQuestionSchema,
-  question3: waitingQuestionSchema,
-  question4: waitingQuestionSchema,
-});
 
 interface QuestioningFormProps {
+  questionCount: number;
   roomId: GenericId<"rooms">;
   roomState: string;
 }
 
 interface QuestionFieldConfig {
   label: string;
-  name: keyof z.infer<typeof questioningFormSchema>;
+  name: string;
 }
 
-const QUESTION_FIELDS: QuestionFieldConfig[] = WAITING_QUESTION_LABELS.map((label, index) => ({
-  label,
-  name: `question${index + 1}` as keyof z.infer<typeof questioningFormSchema>,
-}));
+const getQuestionFieldName = (questionIndex: number): string => `question${questionIndex + 1}`;
 
-const getInitialFormValues = () => ({
-  question1: "",
-  question2: "",
-  question3: "",
-  question4: "",
-});
+const getQuestionFields = (questionCount: number): QuestionFieldConfig[] =>
+  getQuestionIndexes(questionCount).map((questionIndex) => ({
+    label: getQuestionLabel(questionIndex),
+    name: getQuestionFieldName(questionIndex),
+  }));
 
-const getQuestionAnswers = (value: z.infer<typeof questioningFormSchema>): string[] => [
-  value.question1.trim(),
-  value.question2.trim(),
-  value.question3.trim(),
-  value.question4.trim(),
-];
+const getInitialFormValues = (questionCount: number): Record<string, string> =>
+  Object.fromEntries(
+    getQuestionIndexes(questionCount).map((questionIndex) => [
+      getQuestionFieldName(questionIndex),
+      "",
+    ]),
+  );
 
-const getFormValuesFromAnswers = (answers: string[]) => ({
-  question1: answers[0] ?? "",
-  question2: answers[1] ?? "",
-  question3: answers[2] ?? "",
-  question4: answers[3] ?? "",
-});
+const getQuestioningFormSchema = (questionCount: number) =>
+  z.object(
+    Object.fromEntries(
+      getQuestionIndexes(questionCount).map((questionIndex) => [
+        getQuestionFieldName(questionIndex),
+        waitingQuestionSchema,
+      ]),
+    ),
+  );
+
+const getQuestionAnswers = (value: Record<string, string>, questionCount: number): string[] =>
+  getQuestionIndexes(questionCount).map(
+    (questionIndex) => value[getQuestionFieldName(questionIndex)]?.trim() ?? "",
+  );
+
+const getFormValuesFromAnswers = (
+  answers: string[],
+  questionCount: number,
+): Record<string, string> =>
+  Object.fromEntries(
+    getQuestionIndexes(questionCount).map((questionIndex) => [
+      getQuestionFieldName(questionIndex),
+      answers[questionIndex] ?? "",
+    ]),
+  );
 
 const focusFirstInvalidInput = (): void => {
   const invalidInput = document.querySelector("[aria-invalid='true']");
@@ -114,7 +121,11 @@ const focusFirstInvalidInput = (): void => {
   }
 };
 
-export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JSX.Element {
+export function QuestioningForm({
+  questionCount,
+  roomId,
+  roomState,
+}: QuestioningFormProps): JSX.Element {
   const [playerId] = useLocalStorage(ONBOARDING_ID_STORAGE_KEY, stringLocalStorageOptions);
   const [playerName] = useLocalStorage(ONBOARDING_NICKNAME_STORAGE_KEY, stringLocalStorageOptions);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -125,6 +136,8 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
   const normalizedPlayerName = playerName.trim();
   const hasIdentity = normalizedPlayerId !== "" && normalizedPlayerName !== "";
   const isWaitingState = roomState === WAITING_STATE;
+  const questionFields = getQuestionFields(questionCount);
+  const questioningFormSchema = getQuestioningFormSchema(questionCount);
   const submissionQueryOptions = convexQuery(api.games.roomPlayerSubmissions.getForRoomAndPlayer, {
     playerId: normalizedPlayerId,
     roomId,
@@ -142,11 +155,11 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
   if (isSubmitted) {
     cardDescription = "You already submitted your answers for this room.";
   } else if (isWaitingState) {
-    cardDescription = `Answer all ${WAITING_QUESTION_COUNT} questions before the game starts.`;
+    cardDescription = `Answer all ${questionCount} questions before the game starts.`;
   }
 
   const form = useForm({
-    defaultValues: getInitialFormValues(),
+    defaultValues: getInitialFormValues(questionCount),
     onSubmit: () => {
       setIsConfirmDialogOpen(true);
     },
@@ -164,12 +177,12 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
       return;
     }
 
-    form.reset(getFormValuesFromAnswers(submission.answers));
-  }, [form, submission]);
+    form.reset(getFormValuesFromAnswers(submission.answers, questionCount));
+  }, [form, questionCount, submission]);
 
   const handleConfirmSubmit = async (): Promise<void> => {
     const value = form.state.values;
-    const answers = getQuestionAnswers(value);
+    const answers = getQuestionAnswers(value, questionCount);
 
     try {
       setIsSubmittingSubmission(true);
@@ -253,7 +266,7 @@ export function QuestioningForm({ roomId, roomState }: QuestioningFormProps): JS
             className={isSubmitted ? "overflow-visible" : "min-h-0 flex-1 overflow-y-auto"}
           >
             <FieldGroup>
-              {QUESTION_FIELDS.map((questionField) => (
+              {questionFields.map((questionField) => (
                 <form.Field key={questionField.name} name={questionField.name}>
                   {(field) => {
                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;

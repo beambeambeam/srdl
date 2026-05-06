@@ -32,10 +32,11 @@ const generatePreviewRoomCode = (): string =>
 
 interface RoomRow {
   code: string;
+  createdAt: string;
   id: string;
+  questionCount: number;
   state: string;
   title: string;
-  createdAt: string;
 }
 
 const getTitleFilter = (value: string | string[] | null | undefined): string | null => {
@@ -125,6 +126,17 @@ export function AdminRoomTable() {
           })),
           placeholder: "Filter states...",
           variant: "select",
+        },
+      },
+      {
+        accessorKey: "questionCount",
+        cell: ({ row }) => <Badge variant="outline">{row.original.questionCount}</Badge>,
+        enableColumnFilter: false,
+        enableSorting: false,
+        header: () => "Questions",
+        id: "questionCount",
+        meta: {
+          label: "Questions",
         },
       },
       {
@@ -254,7 +266,7 @@ export function AdminRoomTable() {
   });
 
   if (roomPage.isPending && !roomPage.data) {
-    return <DataTableSkeleton columnCount={4} filterCount={1} />;
+    return <DataTableSkeleton columnCount={5} filterCount={1} />;
   }
 
   if (roomPage.error) {
@@ -272,7 +284,8 @@ export function AdminRoomTable() {
           <DialogHeader>
             <DialogTitle>Create room</DialogTitle>
             <DialogDescription>
-              Add a room title and review the generated 6-digit room code.
+              Add a room title, choose the question count, and review the generated 6-digit room
+              code.
             </DialogDescription>
           </DialogHeader>
           <CreateRoomForm
