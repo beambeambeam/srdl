@@ -340,7 +340,7 @@ export default function CreateRoomForm({
                       <TableHeader>
                         <TableRow className="bg-accent/50">
                           <TableHead className="w-12 bg-transparent" />
-                          <TableHead className="w-32 bg-transparent">Question</TableHead>
+                          <TableHead className="w-32 bg-transparent">Index</TableHead>
                           <TableHead className="bg-transparent">Prompt</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -361,8 +361,8 @@ export default function CreateRoomForm({
                                       </Button>
                                     </SortableItemHandle>
                                   </TableCell>
-                                  <TableCell className="align-top font-medium whitespace-normal">
-                                    {`Question ${index + 1}`}
+                                  <TableCell className="font-medium whitespace-normal">
+                                    {`${index + 1}`}
                                   </TableCell>
                                   <TableCell className="whitespace-normal">
                                     <div className="space-y-2">

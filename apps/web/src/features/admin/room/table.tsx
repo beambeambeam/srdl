@@ -280,7 +280,7 @@ export function AdminRoomTable() {
   return (
     <section className="flex h-full min-h-0 flex-col">
       <Dialog onOpenChange={handleCreateDialogChange} open={isCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-xl">
           <DialogHeader>
             <DialogTitle>Create room</DialogTitle>
             <DialogDescription>
