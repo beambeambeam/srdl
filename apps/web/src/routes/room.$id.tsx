@@ -18,6 +18,7 @@ import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
 
 import { RoomStatePanel } from "@/features/room/state-panel";
 import { NO_INDEX_META } from "@/lib/seo";
+import { getRoomQuestionCount } from "@/shared/games";
 
 const ROOM_CODE_PATTERN = /^\d{6}$/;
 
@@ -136,7 +137,11 @@ function RouteComponent() {
         </Badge>
       </div>
       <div className="relative flex h-full w-full flex-1 flex-col items-center overflow-y-auto rounded-xl bg-background p-4 shadow-sm">
-        <RoomStatePanel roomId={roomQuery.data._id} roomState={roomQuery.data.state} />
+        <RoomStatePanel
+          questionCount={getRoomQuestionCount(roomQuery.data.questionCount)}
+          roomId={roomQuery.data._id}
+          roomState={roomQuery.data.state}
+        />
       </div>
     </main>
   );
