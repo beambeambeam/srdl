@@ -1,5 +1,3 @@
-"use client";
-
 import { GripVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
@@ -42,6 +40,7 @@ import {
   MAX_ROOM_QUESTION_COUNT,
   MIN_ROOM_QUESTION_COUNT,
 } from "@/shared/games";
+import { Badge } from "@srdl/ui/components/badge";
 
 const questionItemSchema = z.object({
   id: z.string().min(1),
@@ -212,7 +211,7 @@ export default function CreateRoomForm({
 
   return (
     <form
-      className="space-y-6"
+      className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -254,26 +253,14 @@ export default function CreateRoomForm({
             return (
               <Field data-invalid={isInvalid ? true : undefined}>
                 <FieldLabel htmlFor={field.name}>6 Digit Code</FieldLabel>
-                <Input
-                  aria-invalid={isInvalid}
-                  className="font-mono"
-                  disabled
-                  id={field.name}
-                  inputMode="numeric"
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  pattern="[0-9]{6}"
-                  placeholder="000000"
-                  value={field.state.value}
-                />
-                <FieldDescription>Room codes are generated automatically.</FieldDescription>
-                {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                <Badge className="w-fit h-10 rounded-lg text-xl">{field.state.value}</Badge>
               </Field>
             );
           }}
         </form.Field>
+      </FieldGroup>
 
+      <FieldGroup>
         <form.Field name="questionCount">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
