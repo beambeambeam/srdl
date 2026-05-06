@@ -41,7 +41,8 @@ import { useLocalStorage } from "@srdl/ui/hooks/use-local-storage";
 import { Textarea } from "@srdl/ui/components/textarea";
 
 import { MAX_WAITING_ANSWER_LENGTH } from "@/features/room/constants";
-import { getQuestionIndexes, getQuestionLabel, getRoomStateLabel } from "@/shared/games";
+import type { RoomQuestion } from "@/shared/games";
+import { getRoomStateLabel } from "@/shared/games";
 
 const ONBOARDING_ID_STORAGE_KEY = "id";
 const ONBOARDING_NICKNAME_STORAGE_KEY = "nickname";
@@ -61,7 +62,7 @@ const waitingQuestionSchema = z
   );
 
 interface QuestioningFormProps {
-  questionCount: number;
+  questions: RoomQuestion[];
   roomId: GenericId<"rooms">;
   roomState: string;
 }
@@ -73,41 +74,36 @@ interface QuestionFieldConfig {
 
 const getQuestionFieldName = (questionIndex: number): string => `question${questionIndex + 1}`;
 
-const getQuestionFields = (questionCount: number): QuestionFieldConfig[] =>
-  getQuestionIndexes(questionCount).map((questionIndex) => ({
-    label: getQuestionLabel(questionIndex),
+const getQuestionFields = (questions: RoomQuestion[]): QuestionFieldConfig[] =>
+  questions.map((question, questionIndex) => ({
+    label: question.text,
     name: getQuestionFieldName(questionIndex),
   }));
 
-const getInitialFormValues = (questionCount: number): Record<string, string> =>
+const getInitialFormValues = (questions: RoomQuestion[]): Record<string, string> =>
   Object.fromEntries(
-    getQuestionIndexes(questionCount).map((questionIndex) => [
-      getQuestionFieldName(questionIndex),
-      "",
-    ]),
+    questions.map((_, questionIndex) => [getQuestionFieldName(questionIndex), ""]),
   );
 
-const getQuestioningFormSchema = (questionCount: number) =>
+const getQuestioningFormSchema = (questions: RoomQuestion[]) =>
   z.object(
     Object.fromEntries(
-      getQuestionIndexes(questionCount).map((questionIndex) => [
+      questions.map((_, questionIndex) => [
         getQuestionFieldName(questionIndex),
         waitingQuestionSchema,
       ]),
     ),
   );
 
-const getQuestionAnswers = (value: Record<string, string>, questionCount: number): string[] =>
-  getQuestionIndexes(questionCount).map(
-    (questionIndex) => value[getQuestionFieldName(questionIndex)]?.trim() ?? "",
-  );
+const getQuestionAnswers = (value: Record<string, string>, questions: RoomQuestion[]): string[] =>
+  questions.map((_, questionIndex) => value[getQuestionFieldName(questionIndex)]?.trim() ?? "");
 
 const getFormValuesFromAnswers = (
   answers: string[],
-  questionCount: number,
+  questions: RoomQuestion[],
 ): Record<string, string> =>
   Object.fromEntries(
-    getQuestionIndexes(questionCount).map((questionIndex) => [
+    questions.map((_, questionIndex) => [
       getQuestionFieldName(questionIndex),
       answers[questionIndex] ?? "",
     ]),
@@ -122,7 +118,7 @@ const focusFirstInvalidInput = (): void => {
 };
 
 export function QuestioningForm({
-  questionCount,
+  questions,
   roomId,
   roomState,
 }: QuestioningFormProps): JSX.Element {
@@ -136,8 +132,9 @@ export function QuestioningForm({
   const normalizedPlayerName = playerName.trim();
   const hasIdentity = normalizedPlayerId !== "" && normalizedPlayerName !== "";
   const isWaitingState = roomState === WAITING_STATE;
-  const questionFields = getQuestionFields(questionCount);
-  const questioningFormSchema = getQuestioningFormSchema(questionCount);
+  const questionCount = questions.length;
+  const questionFields = getQuestionFields(questions);
+  const questioningFormSchema = getQuestioningFormSchema(questions);
   const submissionQueryOptions = convexQuery(api.games.roomPlayerSubmissions.getForRoomAndPlayer, {
     playerId: normalizedPlayerId,
     roomId,
@@ -159,7 +156,7 @@ export function QuestioningForm({
   }
 
   const form = useForm({
-    defaultValues: getInitialFormValues(questionCount),
+    defaultValues: getInitialFormValues(questions),
     onSubmit: () => {
       setIsConfirmDialogOpen(true);
     },
@@ -177,12 +174,12 @@ export function QuestioningForm({
       return;
     }
 
-    form.reset(getFormValuesFromAnswers(submission.answers, questionCount));
-  }, [form, questionCount, submission]);
+    form.reset(getFormValuesFromAnswers(submission.answers, questions));
+  }, [form, questions, submission]);
 
   const handleConfirmSubmit = async (): Promise<void> => {
     const value = form.state.values;
-    const answers = getQuestionAnswers(value, questionCount);
+    const answers = getQuestionAnswers(value, questions);
 
     try {
       setIsSubmittingSubmission(true);

@@ -18,7 +18,6 @@ import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
 
 import { RoomStatePanel } from "@/features/room/state-panel";
 import { NO_INDEX_META } from "@/lib/seo";
-import { getRoomQuestionCount } from "@/shared/games";
 
 const ROOM_CODE_PATTERN = /^\d{6}$/;
 
@@ -32,13 +31,13 @@ function RouteComponent() {
   const isRoomCode = ROOM_CODE_PATTERN.test(id);
 
   const roomByIdQuery = useQuery({
-    ...convexQuery(api.games.rooms.getById, {
+    ...convexQuery(api.games.rooms.getByIdForView, {
       id: id as GenericId<"rooms">,
     }),
     enabled: !isRoomCode,
   });
   const roomByCodeQuery = useQuery({
-    ...convexQuery(api.games.rooms.getByCode, {
+    ...convexQuery(api.games.rooms.getByCodeForView, {
       code: id,
     }),
     enabled: isRoomCode,
@@ -138,7 +137,7 @@ function RouteComponent() {
       </div>
       <div className="relative flex h-full w-full flex-1 flex-col items-center overflow-y-auto rounded-xl bg-background p-4 shadow-sm">
         <RoomStatePanel
-          questionCount={getRoomQuestionCount(roomQuery.data.questionCount)}
+          questions={roomQuery.data.questions}
           roomId={roomQuery.data._id}
           roomState={roomQuery.data.state}
         />

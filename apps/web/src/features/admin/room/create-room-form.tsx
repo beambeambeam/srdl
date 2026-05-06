@@ -2,8 +2,10 @@ import { GripVertical, Trash2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import type { JSX } from "react";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { api } from "@srdl/backend/convex/client";
 import { Button } from "@srdl/ui/components/button";
 import {
   Field,
@@ -145,6 +147,7 @@ export default function CreateRoomForm({
 }: CreateRoomFormProps): JSX.Element {
   const nextQuestionId = useRef(0);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const createRoom = useMutation(api.games.rooms.create);
   const getNextQuestion = useCallback((): QuestionItem => {
     const question = createQuestionItem(initialCode, nextQuestionId.current);
     nextQuestionId.current += 1;
@@ -159,12 +162,27 @@ export default function CreateRoomForm({
       questions: [getNextQuestion()],
       title: "",
     },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
       setHasAttemptedSubmit(true);
       createRoomSchema.parse(value);
 
-      toast.success("Validation passed.");
-      onSuccess?.();
+      try {
+        await createRoom({
+          code: value.code,
+          questionCount: value.questionCount,
+          questions: value.questions.map((question) => ({
+            id: question.id,
+            text: question.text.trim(),
+          })),
+          title: value.title.trim(),
+        });
+        toast.success("Room created successfully.");
+        onSuccess?.();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to create room.";
+
+        toast.error(message);
+      }
     },
     onSubmitInvalid: () => {
       setHasAttemptedSubmit(true);

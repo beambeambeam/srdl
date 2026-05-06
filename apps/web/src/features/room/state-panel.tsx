@@ -11,9 +11,10 @@ import { AnswerStatePanel } from "@/features/room/answer-state-panel";
 import { GuessStatePanel } from "@/features/room/guess-state-panel";
 import { QuestioningForm } from "@/features/room/questioning-form";
 import { ShowStatePanel } from "@/features/room/show-state-panel";
+import type { RoomQuestion } from "@/shared/games";
 
 interface RoomStatePanelProps {
-  questionCount: number;
+  questions: RoomQuestion[];
   roomId: GenericId<"rooms">;
   roomState: string;
 }
@@ -44,11 +45,7 @@ const getFutureStateCopy = (
   };
 };
 
-export function RoomStatePanel({
-  questionCount,
-  roomId,
-  roomState,
-}: RoomStatePanelProps): JSX.Element {
+export function RoomStatePanel({ questions, roomId, roomState }: RoomStatePanelProps): JSX.Element {
   const projectorStateQuery = useQuery(
     convexQuery(api.games.rooms.getProjectorState, {
       roomId,
@@ -77,7 +74,7 @@ export function RoomStatePanel({
   const projectorState = projectorStateQuery.data;
 
   if (roomState === "WAITING") {
-    return <QuestioningForm questionCount={questionCount} roomId={roomId} roomState={roomState} />;
+    return <QuestioningForm questions={questions} roomId={roomId} roomState={roomState} />;
   }
 
   if (roomState.startsWith("SHOW-")) {
