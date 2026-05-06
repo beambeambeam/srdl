@@ -190,6 +190,20 @@ export default function CreateRoomForm({
       }}
     >
       <FieldGroup className="grid grid-cols-1 md:grid-cols-[1fr_2fr] md:grid-row-2 gap-6">
+        <form.Field name="code">
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid ? true : undefined}>
+                <FieldLabel htmlFor={field.name}>6 Digit Code</FieldLabel>
+                <FieldDescription>Code to get in room!</FieldDescription>
+                <Badge className="w-fit h-10 rounded-lg text-xl">{field.state.value}</Badge>
+              </Field>
+            );
+          }}
+        </form.Field>
+
         <form.Field name="title">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -211,20 +225,6 @@ export default function CreateRoomForm({
                   value={field.state.value}
                 />
                 {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
-              </Field>
-            );
-          }}
-        </form.Field>
-
-        <form.Field name="code">
-          {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid ? true : undefined}>
-                <FieldLabel htmlFor={field.name}>6 Digit Code</FieldLabel>
-                <FieldDescription>Code to get in room!</FieldDescription>
-                <Badge className="w-fit h-10 rounded-lg text-xl">{field.state.value}</Badge>
               </Field>
             );
           }}
