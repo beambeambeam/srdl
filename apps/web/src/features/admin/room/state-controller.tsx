@@ -7,60 +7,24 @@ import { toast } from "sonner";
 import { api } from "@srdl/backend/convex/client";
 import { Badge } from "@srdl/ui/components/badge";
 import { Button } from "@srdl/ui/components/button";
-import { ROOM_STATES, getRoomStateLabel } from "@/shared/games";
+import { getRoomStateLabel, getRoomStatesForQuestionCount } from "@/shared/games";
 
 interface RoomStateControllerProps {
   roomId: GenericId<"rooms">;
+  questionCount: number;
   roomState: string;
 }
 
 type SegmentVariant = "current" | "passed" | "upcoming";
 
-const getStateIndex = (state: string): number =>
-  ROOM_STATES.indexOf(state as (typeof ROOM_STATES)[number]);
+const getStateIndex = (roomStates: string[], state: string): number => roomStates.indexOf(state);
 
 const getTimelineLabel = (state: string): string => {
-  switch (state) {
-    case "SHOW-1ST-QUESTION": {
-      return "Show 1";
-    }
-    case "GUESS-1ST-QUESTION": {
-      return "Guess 1";
-    }
-    case "ANSWER-1ST-QUESTION": {
-      return "Answer 1";
-    }
-    case "SHOW-2ND-QUESTION": {
-      return "Show 2";
-    }
-    case "GUESS-2ND-QUESTION": {
-      return "Guess 2";
-    }
-    case "ANSWER-2ND-QUESTION": {
-      return "Answer 2";
-    }
-    case "SHOW-3RD-QUESTION": {
-      return "Show 3";
-    }
-    case "GUESS-3RD-QUESTION": {
-      return "Guess 3";
-    }
-    case "ANSWER-3RD-QUESTION": {
-      return "Answer 3";
-    }
-    case "SHOW-4TH-QUESTION": {
-      return "Show 4";
-    }
-    case "GUESS-4TH-QUESTION": {
-      return "Guess 4";
-    }
-    case "ANSWER-4TH-QUESTION": {
-      return "Answer 4";
-    }
-    default: {
-      return getRoomStateLabel(state);
-    }
+  if (state === "WAITING" || state === "WRAP UP") {
+    return getRoomStateLabel(state);
   }
+
+  return getRoomStateLabel(state).replace(" Question ", " ");
 };
 
 const getSegmentVariant = (index: number, currentIndex: number): SegmentVariant => {
@@ -105,13 +69,18 @@ const getLabelClassName = (variant: SegmentVariant): string => {
   }
 };
 
-export function RoomStateController({ roomId, roomState }: RoomStateControllerProps): JSX.Element {
+export function RoomStateController({
+  questionCount,
+  roomId,
+  roomState,
+}: RoomStateControllerProps): JSX.Element {
   const changeRoomState = useMutation(api.games.rooms.changeStateByDelta);
-  const currentStateIndex = getStateIndex(roomState);
+  const roomStates = getRoomStatesForQuestionCount(questionCount);
+  const currentStateIndex = getStateIndex(roomStates, roomState);
   const safeStateIndex = currentStateIndex === -1 ? 0 : currentStateIndex;
-  const currentStateLabel = getRoomStateLabel(ROOM_STATES[safeStateIndex] ?? roomState);
+  const currentStateLabel = getRoomStateLabel(roomStates[safeStateIndex] ?? roomState);
   const canMoveLeft = safeStateIndex > 0;
-  const canMoveRight = safeStateIndex < ROOM_STATES.length - 1;
+  const canMoveRight = safeStateIndex < roomStates.length - 1;
 
   const handleStateChange = async (direction: "left" | "right"): Promise<void> => {
     try {
@@ -128,9 +97,12 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
   return (
     <section className="w-full rounded-lg text-foreground">
       <div className="overflow-x-auto pb-1 hidden lg:block">
-        <div className="min-w-208">
-          <div className="mb-2 grid h-14 grid-cols-14 items-end gap-1 lg:h-16">
-            {ROOM_STATES.map((state, index) => {
+        <div className="min-w-max">
+          <div
+            className="mb-2 grid h-14 min-w-max items-end gap-1 lg:h-16"
+            style={{ gridTemplateColumns: `repeat(${roomStates.length}, minmax(0, 1fr))` }}
+          >
+            {roomStates.map((state, index) => {
               const variant = getSegmentVariant(index, safeStateIndex);
 
               return (
@@ -150,10 +122,13 @@ export function RoomStateController({ roomId, roomState }: RoomStateControllerPr
           </div>
 
           <div className="overflow-hidden rounded-md border border-border bg-muted">
-            <div className="grid grid-cols-14">
-              {ROOM_STATES.map((state, index) => {
+            <div
+              className="grid min-w-max"
+              style={{ gridTemplateColumns: `repeat(${roomStates.length}, minmax(0, 1fr))` }}
+            >
+              {roomStates.map((state, index) => {
                 const variant = getSegmentVariant(index, safeStateIndex);
-                const isLast = index === ROOM_STATES.length - 1;
+                const isLast = index === roomStates.length - 1;
 
                 return (
                   <div

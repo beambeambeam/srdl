@@ -19,7 +19,12 @@ import {
   CardTitle,
 } from "@srdl/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@srdl/ui/components/tabs";
-import { getRoomStateLabel } from "@/shared/games";
+import {
+  getQuestionIndexes,
+  getQuestionLabel,
+  getRoomQuestionCount,
+  getRoomStateLabel,
+} from "@/shared/games";
 
 function AdminRoomDetailPage() {
   const { id } = useParams({
@@ -68,6 +73,8 @@ function AdminRoomDetailPage() {
   }
 
   const room = roomQuery.data;
+  const questionCount = getRoomQuestionCount(room.questionCount);
+  const questionIndexes = getQuestionIndexes(questionCount);
 
   return (
     <main className="flex w-full h-full min-h-0 p-4">
@@ -83,7 +90,11 @@ function AdminRoomDetailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <RoomStateController roomId={room._id} roomState={room.state} />
+            <RoomStateController
+              questionCount={questionCount}
+              roomId={room._id}
+              roomState={room.state}
+            />
           </CardContent>
         </Card>
         <div className="grid w-full gap-4 lg:grid-cols-[2fr_1fr]">
@@ -98,54 +109,36 @@ function AdminRoomDetailPage() {
                     <TabsTrigger value="waiting" className="shrink-0">
                       Waiting
                     </TabsTrigger>
-                    <TabsTrigger value="question-1" className="shrink-0">
-                      Question 1
-                    </TabsTrigger>
-                    <TabsTrigger value="question-2" className="shrink-0">
-                      Question 2
-                    </TabsTrigger>
-                    <TabsTrigger value="question-3" className="shrink-0">
-                      Question 3
-                    </TabsTrigger>
-                    <TabsTrigger value="question-4" className="shrink-0">
-                      Question 4
-                    </TabsTrigger>
+                    {questionIndexes.map((questionIndex) => (
+                      <TabsTrigger
+                        key={questionIndex}
+                        value={`question-${questionIndex + 1}`}
+                        className="shrink-0"
+                      >
+                        {getQuestionLabel(questionIndex)}
+                      </TabsTrigger>
+                    ))}
                     <TabsTrigger value="wrap-up" className="shrink-0">
                       Wrap up
                     </TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value="waiting" className="pt-2">
-                  <WaitingTable roomId={room._id} />
+                  <WaitingTable questionCount={questionCount} roomId={room._id} />
                 </TabsContent>
-                <TabsContent value="question-1" className="pt-2">
-                  <QuestionAnswerTable
-                    questionIndex={0}
-                    questionLabel="Question 1"
-                    roomId={room._id}
-                  />
-                </TabsContent>
-                <TabsContent value="question-2" className="pt-2">
-                  <QuestionAnswerTable
-                    questionIndex={1}
-                    questionLabel="Question 2"
-                    roomId={room._id}
-                  />
-                </TabsContent>
-                <TabsContent value="question-3" className="pt-2">
-                  <QuestionAnswerTable
-                    questionIndex={2}
-                    questionLabel="Question 3"
-                    roomId={room._id}
-                  />
-                </TabsContent>
-                <TabsContent value="question-4" className="pt-2">
-                  <QuestionAnswerTable
-                    questionIndex={3}
-                    questionLabel="Question 4"
-                    roomId={room._id}
-                  />
-                </TabsContent>
+                {questionIndexes.map((questionIndex) => (
+                  <TabsContent
+                    key={questionIndex}
+                    value={`question-${questionIndex + 1}`}
+                    className="pt-2"
+                  >
+                    <QuestionAnswerTable
+                      questionIndex={questionIndex}
+                      questionLabel={getQuestionLabel(questionIndex)}
+                      roomId={room._id}
+                    />
+                  </TabsContent>
+                ))}
                 <TabsContent value="wrap-up" className="pt-2">
                   <WrapUpTable roomId={room._id} />
                 </TabsContent>

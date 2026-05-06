@@ -12,7 +12,7 @@ import type { JSX } from "react";
 import { useMemo } from "react";
 
 interface QuestionAnswerTableProps {
-  questionIndex: 0 | 1 | 2 | 3;
+  questionIndex: number;
   questionLabel: string;
   roomId: GenericId<"rooms">;
 }
