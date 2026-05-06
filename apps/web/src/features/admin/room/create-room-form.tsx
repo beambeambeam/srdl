@@ -1,5 +1,5 @@
-import { GripVertical } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { GripVertical, Trash2 } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import type { JSX } from "react";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -47,6 +47,8 @@ const questionItemSchema = z.object({
   text: z.string().trim().min(1, "Question text is required."),
 });
 
+const QUESTION_COUNT_MISMATCH_ERROR = "Question count must match the number of question rows.";
+
 const createRoomSchema = z
   .object({
     code: z.string().regex(/^\d{6}$/, "Room code must be 6 digits."),
@@ -83,7 +85,7 @@ const createRoomSchema = z
     if (value.questions.length !== value.questionCount) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Exactly ${value.questionCount} questions are required.`,
+        message: QUESTION_COUNT_MISMATCH_ERROR,
         path: ["questions"],
       });
     }
@@ -124,29 +126,10 @@ const getQuestionErrors = (questions: QuestionItem[], questionCount: number): Qu
   }
 
   if (questions.length !== questionCount) {
-    rootErrors.push({ message: `Exactly ${questionCount} questions are required.` });
+    rootErrors.push({ message: QUESTION_COUNT_MISMATCH_ERROR });
   }
 
   return { rootErrors, rowErrors };
-};
-
-const getQuestionsForCount = (
-  questions: QuestionItem[],
-  questionCount: number,
-  createQuestion: () => QuestionItem,
-): QuestionItem[] => {
-  if (questions.length === questionCount) {
-    return questions;
-  }
-
-  if (questions.length > questionCount) {
-    return questions.slice(0, questionCount);
-  }
-
-  return [
-    ...questions,
-    ...Array.from({ length: questionCount - questions.length }, () => createQuestion()),
-  ];
 };
 
 interface CreateRoomFormProps {
@@ -196,18 +179,6 @@ export default function CreateRoomForm({
       onSubmit: createRoomSchema,
     },
   });
-
-  useEffect(() => {
-    const syncedQuestions = getQuestionsForCount(
-      form.state.values.questions,
-      form.state.values.questionCount,
-      getNextQuestion,
-    );
-
-    if (syncedQuestions !== form.state.values.questions) {
-      form.setFieldValue("questions", syncedQuestions);
-    }
-  }, [form, form.state.values.questionCount, form.state.values.questions, getNextQuestion]);
 
   return (
     <form
@@ -298,15 +269,23 @@ export default function CreateRoomForm({
 
         <form.Field name="questions">
           {(field) => {
-            const hasValidationState = field.state.meta.isTouched || hasAttemptedSubmit;
             const questionErrors = getQuestionErrors(
               field.state.value,
               form.state.values.questionCount,
             );
+            const hasMismatchError = field.state.value.length !== form.state.values.questionCount;
+            const hasPromptValidationState = field.state.meta.isTouched || hasAttemptedSubmit;
+            const visibleRootErrors =
+              hasPromptValidationState || hasMismatchError
+                ? questionErrors.rootErrors.filter(
+                    (error) =>
+                      error.message === QUESTION_COUNT_MISMATCH_ERROR || hasPromptValidationState,
+                  )
+                : [];
+            const visibleRowErrors = hasPromptValidationState ? questionErrors.rowErrors : {};
             const isInvalid =
-              hasValidationState &&
-              (questionErrors.rootErrors.length > 0 ||
-                Object.keys(questionErrors.rowErrors).length > 0);
+              visibleRootErrors.length > 0 || Object.keys(visibleRowErrors).length > 0;
+            const isAddQuestionDisabled = field.state.value.length >= MAX_ROOM_QUESTION_COUNT;
 
             return (
               <Field data-invalid={isInvalid ? true : undefined}>
@@ -314,6 +293,23 @@ export default function CreateRoomForm({
                 <FieldDescription>
                   Write each question prompt and drag rows to reorder them.
                 </FieldDescription>
+                <div className="space-y-2">
+                  <Button
+                    disabled={isAddQuestionDisabled}
+                    onClick={() => {
+                      field.handleChange([...field.state.value, getNextQuestion()]);
+                    }}
+                    type="button"
+                    variant="outline"
+                  >
+                    Add question
+                  </Button>
+                  {isAddQuestionDisabled ? (
+                    <p className="text-muted-foreground text-sm">
+                      You can add up to {MAX_ROOM_QUESTION_COUNT} questions.
+                    </p>
+                  ) : null}
+                </div>
                 <div className="overflow-hidden rounded-md border">
                   <Sortable
                     getItemValue={(item) => item.id}
@@ -326,54 +322,84 @@ export default function CreateRoomForm({
                           <TableHead className="w-12 bg-transparent" />
                           <TableHead className="w-32 bg-transparent">Index</TableHead>
                           <TableHead className="bg-transparent">Prompt</TableHead>
+                          <TableHead className="w-20 bg-transparent text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <SortableContent asChild>
                         <TableBody>
-                          {field.state.value.map((question, index) => {
-                            const rowInputId = `${field.name}-${question.id}`;
-                            const rowErrors = questionErrors.rowErrors[index] ?? [];
-                            const rowIsInvalid = isInvalid && rowErrors.length > 0;
+                          {field.state.value.length === 0 ? (
+                            <TableRow>
+                              <TableCell
+                                className="text-muted-foreground py-6 text-center"
+                                colSpan={4}
+                              >
+                                No question rows yet. Add a question to continue.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            field.state.value.map((question, index) => {
+                              const rowInputId = `${field.name}-${question.id}`;
+                              const rowErrors = visibleRowErrors[index] ?? [];
+                              const rowIsInvalid = rowErrors.length > 0;
 
-                            return (
-                              <SortableItem asChild key={question.id} value={question.id}>
-                                <TableRow>
-                                  <TableCell className="w-12 align-top">
-                                    <SortableItemHandle asChild>
-                                      <Button className="size-8" size="icon" variant="ghost">
-                                        <GripVertical className="size-4" />
-                                      </Button>
-                                    </SortableItemHandle>
-                                  </TableCell>
-                                  <TableCell className="font-medium whitespace-normal">
-                                    {`${index + 1}`}
-                                  </TableCell>
-                                  <TableCell className="whitespace-normal">
-                                    <div className="space-y-2">
-                                      <Input
-                                        aria-invalid={rowIsInvalid}
-                                        id={rowInputId}
-                                        name={rowInputId}
-                                        onBlur={field.handleBlur}
-                                        onChange={(event) => {
-                                          const nextQuestions = field.state.value.map((item) =>
-                                            item.id === question.id
-                                              ? { ...item, text: event.target.value }
-                                              : item,
+                              return (
+                                <SortableItem asChild key={question.id} value={question.id}>
+                                  <TableRow>
+                                    <TableCell className="w-12 align-top">
+                                      <SortableItemHandle asChild>
+                                        <Button className="size-8" size="icon" variant="ghost">
+                                          <GripVertical className="size-4" />
+                                        </Button>
+                                      </SortableItemHandle>
+                                    </TableCell>
+                                    <TableCell className="font-medium whitespace-normal">
+                                      {`${index + 1}`}
+                                    </TableCell>
+                                    <TableCell className="whitespace-normal">
+                                      <div className="space-y-2">
+                                        <Input
+                                          aria-invalid={rowIsInvalid}
+                                          id={rowInputId}
+                                          name={rowInputId}
+                                          onBlur={field.handleBlur}
+                                          onChange={(event) => {
+                                            const nextQuestions = field.state.value.map((item) =>
+                                              item.id === question.id
+                                                ? { ...item, text: event.target.value }
+                                                : item,
+                                            );
+
+                                            field.handleChange(nextQuestions);
+                                          }}
+                                          placeholder={`Enter question ${index + 1}`}
+                                          value={question.text}
+                                        />
+                                        {rowIsInvalid ? <FieldError errors={rowErrors} /> : null}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="w-20 align-top text-right">
+                                      <Button
+                                        aria-label={`Remove question ${index + 1}`}
+                                        className="size-8"
+                                        onClick={() => {
+                                          const nextQuestions = field.state.value.filter(
+                                            (item) => item.id !== question.id,
                                           );
 
                                           field.handleChange(nextQuestions);
                                         }}
-                                        placeholder={`Enter question ${index + 1}`}
-                                        value={question.text}
-                                      />
-                                      {rowIsInvalid ? <FieldError errors={rowErrors} /> : null}
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              </SortableItem>
-                            );
-                          })}
+                                        size="icon"
+                                        type="button"
+                                        variant="ghost"
+                                      >
+                                        <Trash2 className="size-4" />
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                </SortableItem>
+                              );
+                            })
+                          )}
                         </TableBody>
                       </SortableContent>
                     </Table>
@@ -382,7 +408,7 @@ export default function CreateRoomForm({
                     </SortableOverlay>
                   </Sortable>
                 </div>
-                {isInvalid ? <FieldError errors={questionErrors.rootErrors} /> : null}
+                {isInvalid ? <FieldError errors={visibleRootErrors} /> : null}
               </Field>
             );
           }}
