@@ -211,7 +211,6 @@ export default function CreateRoomForm({
 
   return (
     <form
-      className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -219,7 +218,7 @@ export default function CreateRoomForm({
         void form.handleSubmit();
       }}
     >
-      <FieldGroup>
+      <FieldGroup className="grid grid-cols-1 md:grid-cols-[1fr_2fr] md:grid-row-2 gap-6">
         <form.Field name="title">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -227,6 +226,9 @@ export default function CreateRoomForm({
             return (
               <Field data-invalid={isInvalid ? true : undefined}>
                 <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                <FieldDescription>
+                  Give the room a clear title for admins to find it.
+                </FieldDescription>
                 <Input
                   aria-invalid={isInvalid}
                   autoComplete="off"
@@ -237,9 +239,6 @@ export default function CreateRoomForm({
                   placeholder="Room A"
                   value={field.state.value}
                 />
-                <FieldDescription>
-                  Give the room a clear title for admins to find it.
-                </FieldDescription>
                 {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
               </Field>
             );
@@ -253,14 +252,13 @@ export default function CreateRoomForm({
             return (
               <Field data-invalid={isInvalid ? true : undefined}>
                 <FieldLabel htmlFor={field.name}>6 Digit Code</FieldLabel>
+                <FieldDescription>Code to get in room!</FieldDescription>
                 <Badge className="w-fit h-10 rounded-lg text-xl">{field.state.value}</Badge>
               </Field>
             );
           }}
         </form.Field>
-      </FieldGroup>
 
-      <FieldGroup>
         <form.Field name="questionCount">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -268,6 +266,10 @@ export default function CreateRoomForm({
             return (
               <Field data-invalid={isInvalid ? true : undefined}>
                 <FieldLabel htmlFor={field.name}>Question</FieldLabel>
+                <FieldDescription>
+                  Need to create {field.state.value}{" "}
+                  {field.state.value === 1 ? "question" : "questions"}.
+                </FieldDescription>
                 <NumberField
                   allowWheelScrub
                   defaultValue={DEFAULT_NEW_ROOM_QUESTION_COUNT}
@@ -288,10 +290,6 @@ export default function CreateRoomForm({
                     <NumberFieldIncrement />
                   </NumberFieldGroup>
                 </NumberField>
-                <FieldDescription>
-                  Need to create {field.state.value}{" "}
-                  {field.state.value === 1 ? "question" : "questions"}.
-                </FieldDescription>
                 {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
               </Field>
             );
@@ -314,8 +312,7 @@ export default function CreateRoomForm({
               <Field data-invalid={isInvalid ? true : undefined}>
                 <FieldLabel>Questions</FieldLabel>
                 <FieldDescription>
-                  Write each question prompt and drag rows to reorder them. The list always matches
-                  the selected question count.
+                  Write each question prompt and drag rows to reorder them.
                 </FieldDescription>
                 <div className="overflow-hidden rounded-md border">
                   <Sortable
