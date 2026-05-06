@@ -2,7 +2,15 @@ import { v } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
-import { DEFAULT_ROOM_STATE, ROOM_STATES } from "../roomStates";
+import {
+  DEFAULT_NEW_ROOM_QUESTION_COUNT,
+  DEFAULT_ROOM_STATE,
+  getQuestionIndexes,
+  getRoomQuestionCount,
+  getRoomStatesForQuestionCount,
+  MAX_ROOM_QUESTION_COUNT,
+  MIN_ROOM_QUESTION_COUNT,
+} from "../roomStates";
 import type { RoomState } from "../roomStates";
 import {
   getQuestionIndexFromRoomState,
@@ -39,8 +47,6 @@ interface PromptSelection {
   submissionId: RoomPlayerSubmissionDocument["_id"];
 }
 
-const getCurrentRoomStateIndex = (state: string): number => ROOM_STATES.indexOf(state as RoomState);
-
 const getNormalizedPage = (page: number): number => Math.max(1, Math.floor(page));
 
 const getNormalizedPerPage = (perPage: number): number =>
@@ -48,6 +54,10 @@ const getNormalizedPerPage = (perPage: number): number =>
 
 const getNormalizedTitle = (title: string): string => title.trim();
 const isValidRoomCode = (code: string): boolean => ROOM_CODE_REGEX.test(code);
+const isValidQuestionCount = (questionCount: number): boolean =>
+  Number.isInteger(questionCount) &&
+  questionCount >= MIN_ROOM_QUESTION_COUNT &&
+  questionCount <= MAX_ROOM_QUESTION_COUNT;
 const generateSixDigitRoomCode = (): string =>
   Math.floor(Math.random() * 1_000_000)
     .toString()
@@ -250,6 +260,7 @@ function sortRoomDocumentsByCreationTime(
 export const create = mutation({
   args: {
     code: v.optional(v.string()),
+    questionCount: v.optional(v.number()),
     title: v.string(),
   },
   handler: async (ctx, args) => {
@@ -257,6 +268,14 @@ export const create = mutation({
 
     if (title === "") {
       throw new Error("Room title is required.");
+    }
+
+    const questionCount = args.questionCount ?? DEFAULT_NEW_ROOM_QUESTION_COUNT;
+
+    if (!isValidQuestionCount(questionCount)) {
+      throw new Error(
+        `Question count must be an integer between ${MIN_ROOM_QUESTION_COUNT} and ${MAX_ROOM_QUESTION_COUNT}.`,
+      );
     }
 
     let code: string;
@@ -303,6 +322,7 @@ export const create = mutation({
 
     return await ctx.db.insert("rooms", {
       code,
+      questionCount,
       state: DEFAULT_ROOM_STATE,
       title,
     });
@@ -361,6 +381,7 @@ export const getTablePage = query({
         code: room.code,
         createdAt: new Date(room._creationTime).toISOString(),
         id: room._id,
+        questionCount: getRoomQuestionCount(room.questionCount),
         state: room.state,
         title: room.title,
       })),
@@ -439,7 +460,8 @@ export const changeStateByDelta = mutation({
       throw new Error("Room not found.");
     }
 
-    const currentStateIndex = getCurrentRoomStateIndex(room.state);
+    const roomStates = getRoomStatesForQuestionCount(getRoomQuestionCount(room.questionCount));
+    const currentStateIndex = roomStates.indexOf(room.state as RoomState);
 
     if (currentStateIndex === -1) {
       throw new Error(`Invalid room state: ${room.state}.`);
@@ -448,11 +470,11 @@ export const changeStateByDelta = mutation({
     const stateDelta = args.direction === "right" ? 1 : -1;
     const nextStateIndex = currentStateIndex + stateDelta;
 
-    if (nextStateIndex < 0 || nextStateIndex >= ROOM_STATES.length) {
+    if (nextStateIndex < 0 || nextStateIndex >= roomStates.length) {
       return room.state;
     }
 
-    const nextState = ROOM_STATES[nextStateIndex];
+    const nextState = roomStates[nextStateIndex];
     const nextQuestionIndex = getQuestionIndexFromRoomState(nextState);
 
     if (nextState === "WAITING" || nextState === "WRAP UP") {
@@ -467,6 +489,12 @@ export const changeStateByDelta = mutation({
     if (isPromptDrivenState(nextState)) {
       if (nextQuestionIndex === null) {
         throw new Error(`Unable to determine question index for state ${nextState}.`);
+      }
+
+      const questionIndexes = getQuestionIndexes(getRoomQuestionCount(room.questionCount));
+
+      if (!questionIndexes.includes(nextQuestionIndex)) {
+        throw new Error(`Question ${nextQuestionIndex + 1} is not available for this room.`);
       }
 
       const persistedSelection = getPersistedPromptSelection(room, nextQuestionIndex);
@@ -494,6 +522,12 @@ export const changeStateByDelta = mutation({
     if (isShowState(nextState)) {
       if (nextQuestionIndex === null) {
         throw new Error(`Unable to determine question index for state ${nextState}.`);
+      }
+
+      const questionIndexes = getQuestionIndexes(getRoomQuestionCount(room.questionCount));
+
+      if (!questionIndexes.includes(nextQuestionIndex)) {
+        throw new Error(`Question ${nextQuestionIndex + 1} is not available for this room.`);
       }
 
       const submissions = await ctx.db
