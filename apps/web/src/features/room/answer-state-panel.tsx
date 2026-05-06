@@ -85,7 +85,9 @@ export function AnswerStatePanel({
     );
   }
 
-  const isCorrect = playerGuessQuery.data?.guessedPlayerId === activePrompt.playerId;
+  const lockedGuess = playerGuessQuery.data ?? null;
+  const selectedPlayerName = lockedGuess?.guessedPlayerName ?? "No guess recorded";
+  const isCorrect = lockedGuess?.guessedPlayerId === activePrompt.playerId;
   const resultCopy = isCorrect ? "Yes, you got it right." : "No, that was not your guess.";
 
   return (
@@ -98,6 +100,17 @@ export function AnswerStatePanel({
       </div>
 
       <Showblock answer={activePrompt.answer} />
+
+      <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border bg-background p-4 text-left">
+          <p className="text-muted-foreground text-xs uppercase tracking-wide">You selected</p>
+          <p className="mt-2 font-heading text-2xl leading-tight">{selectedPlayerName}</p>
+        </div>
+        <div className="rounded-xl border bg-background p-4 text-left">
+          <p className="text-muted-foreground text-xs uppercase tracking-wide">Correct answer</p>
+          <p className="mt-2 font-heading text-2xl leading-tight">{activePrompt.playerName}</p>
+        </div>
+      </div>
 
       <p className="font-heading text-3xl leading-tight sm:text-4xl lg:text-5xl">{resultCopy}</p>
     </section>
