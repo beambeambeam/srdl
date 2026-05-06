@@ -109,9 +109,9 @@ function AdminRoomDetailPage() {
                       <TabsTrigger
                         key={question.id}
                         value={getQuestionTabValue(questionIndex)}
-                        className="max-w-56 shrink-0"
+                        className="shrink-0"
                       >
-                        <span className="block max-w-48 truncate">{question.text}</span>
+                        {`Question ${questionIndex + 1}`}
                       </TabsTrigger>
                     ))}
                     <TabsTrigger value="wrap-up" className="shrink-0">
@@ -126,8 +126,16 @@ function AdminRoomDetailPage() {
                   <TabsContent
                     key={question.id}
                     value={getQuestionTabValue(questionIndex)}
-                    className="pt-2"
+                    className="space-y-3 pt-2"
                   >
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide">
+                        Prompt
+                      </p>
+                      <p className="mt-1 font-medium text-sm whitespace-pre-wrap">
+                        {question.text}
+                      </p>
+                    </div>
                     <QuestionAnswerTable
                       questionIndex={questionIndex}
                       questionLabel={question.text}
